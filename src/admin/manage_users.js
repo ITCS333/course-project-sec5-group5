@@ -95,8 +95,9 @@ function renderTable(userArray) {
  * 6. On failure, show the error message returned by the API.
  */
 function handleChangePassword(event) {
+  event.preventDefault();
   // ... your implementation here ...
- event.preventDefault();
+
 
   const currentPassword = document.getElementById("current-password").value;
   const newPassword = document.getElementById("new-password").value;
@@ -130,9 +131,9 @@ function handleChangePassword(event) {
       if (result.status >= 200 && result.status < 300) {
         alert("Password updated successfully!");
 
-        currentPassword.value = "";
-        newPassword.value = "";
-        confirmPassword.value = "";
+        document.getElementById("current-password").value = "";
+        document.getElementById("new-password").value = "";
+        document.getElementById("confirm-password").value = "";
       } else {
         alert(result.body.message || "Something went wrong.");
       }
@@ -175,7 +176,7 @@ function handleAddUser(event) {
     alert("Password must be at least 8 characters.");
     return;
   }
-  
+
   fetch("../api/index.php", {
     method: "POST",
     headers: {
@@ -227,23 +228,24 @@ function handleTableClick(event) {
   // ... your implementation here ...
   if (event.target.classList.contains("delete-btn")) {
     const id = event.target.getAttribute("data-id");
-  }
-fetch("../api/index.php?id=" + id, {
+
+    fetch("../api/index.php?id=" + id, {
       method: "DELETE"
     })
-    .then(response => response.json().then(data => ({ status: response.status, body: data })))
-    .then(result => {
-      if (result.status === 200) {
-        alert("User deleted successfully!");
-        loadUsersAndInitialize();
-      } else {
-        alert(result.body.message || "Something went wrong.");
-      }
-    })
-    .catch(error => {
-      console.error(error);
-      alert("Error connecting to server.");
-    });
+      .then(response => response.json().then(data => ({ status: response.status, body: data })))
+      .then(result => {
+        if (result.status === 200) {
+          alert("User deleted successfully!");
+          loadUsersAndInitialize();
+        } else {
+          alert(result.body.message || "Something went wrong.");
+        }
+      })
+      .catch(error => {
+        console.error(error);
+        alert("Error connecting to server.");
+      });
+  }
 
 }
 
@@ -265,8 +267,8 @@ function handleSearch(event) {
     renderTable(users);
     return;
   }
-  const filteredUsers = users.filter(user => 
-    user.name.toLowerCase().includes(searchTerm) || 
+  const filteredUsers = users.filter(user =>
+    user.name.toLowerCase().includes(searchTerm) ||
     user.email.toLowerCase().includes(searchTerm)
   );
   renderTable(filteredUsers);
@@ -291,27 +293,34 @@ function handleSearch(event) {
  */
 function handleSort(event) {
   // ... your implementation here ...
-  const columnIndex = event.currentTarget.cellIndex;
-  const columnMap = {
-    0: "name",
-    1: "email",
-    2: "is_admin"
-  };
-  const sortKey = columnMap[columnIndex];
-  if (!sortKey) return;
-  const currentDir = event.currentTarget.getAttribute("data-sort-dir") || "asc";
-  const newDir = currentDir === "asc" ? "desc" : "asc";
-  event.currentTarget.setAttribute("data-sort-dir", newDir);
+  const index = event.currentTarget.cellIndex;
+  const map = ["name", "email", "is_admin"];
+  const key = map[index];
+
+  let dir = event.currentTarget.dataset.sortDir;
+
+  // FIRST CLICK = ASC
+  if (!dir) {
+    dir = "asc";
+  } else {
+    dir = dir === "asc" ? "desc" : "asc";
+  }
+
+  event.currentTarget.dataset.sortDir = dir;
+
   users.sort((a, b) => {
-    let comparison = 0;
-    if (sortKey === "name" || sortKey === "email") {
-      comparison = a[sortKey].localeCompare(b[sortKey]);
-    } else if (sortKey === "is_admin") {
-      comparison = a[sortKey] - b[sortKey];
+    if (key === "name" || key === "email") {
+      return dir === "asc"
+        ? a[key].localeCompare(b[key])
+        : b[key].localeCompare(a[key]);
+    } else {
+      return dir === "asc"
+        ? a[key] - b[key]
+        : b[key] - a[key];
     }
-    return newDir === "asc" ? comparison : -comparison;
   });
-  renderTable(users);
+
+  renderTable(users);;
 
 }
 
@@ -351,6 +360,15 @@ async function loadUsersAndInitialize() {
     console.error("Error:", error);
     alert("Error connecting to server.");
   }
+
+  changePasswordForm.addEventListener("submit", handleChangePassword);
+  addUserForm.addEventListener("submit", handleAddUser);
+  userTableBody.addEventListener("click", handleTableClick);
+  searchInput.addEventListener("input", handleSearch);
+
+  tableHeaders.forEach(th => {
+    th.addEventListener("click", handleSort);
+  });
 
 }
 
