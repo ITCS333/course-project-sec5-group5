@@ -96,7 +96,7 @@ function renderTable(userArray) {
  */
 function handleChangePassword(event) {
   // ... your implementation here ...
-event.preventDefault();
+  event.preventDefault();
 
 
   const currentPassword = document.getElementById("current-password").value;
@@ -112,9 +112,9 @@ event.preventDefault();
     alert("Password must be at least 8 characters.");
     return;
   }
-  document.getElementById("current-password").value = "";
-  document.getElementById("new-password").value = "";
-  document.getElementById("confirm-password").value = "";
+  currentPassword.value = "";
+  newPassword.value = "";
+  confirmPassword.value = "";
 
   const id = localStorage.getItem("user_id");
 
