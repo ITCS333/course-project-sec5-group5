@@ -95,6 +95,8 @@ function renderTable(userArray) {
  * 6. On failure, show the error message returned by the API.
  */
 function handleChangePassword(event) {
+  // ... your implementation here ...
+  if (!event) return;
   event.preventDefault();
 
 
@@ -111,6 +113,9 @@ function handleChangePassword(event) {
     alert("Password must be at least 8 characters.");
     return;
   }
+  currentPassword.value = "";
+  newPassword.value = "";
+  confirmPassword.value = "";
 
   const id = localStorage.getItem("user_id");
 
@@ -173,7 +178,6 @@ function handleAddUser(event) {
     alert("Password must be at least 8 characters.");
     return;
   }
-
   fetch("../api/index.php", {
     method: "POST",
     headers: {
