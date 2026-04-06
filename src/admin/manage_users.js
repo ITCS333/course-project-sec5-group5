@@ -96,7 +96,7 @@ function renderTable(userArray) {
  */
 function handleChangePassword(event) {
   // ... your implementation here ...
-  event.preventDefault();
+ event.preventDefault();
 
   const currentPassword = document.getElementById("current-password").value;
   const newPassword = document.getElementById("new-password").value;
@@ -130,9 +130,9 @@ function handleChangePassword(event) {
       if (result.status >= 200 && result.status < 300) {
         alert("Password updated successfully!");
 
-        document.getElementById("current-password").value = "";
-        document.getElementById("new-password").value = "";
-        document.getElementById("confirm-password").value = "";
+        currentPassword.value = "";
+        newPassword.value = "";
+        confirmPassword.value = "";
       } else {
         alert(result.body.message || "Something went wrong.");
       }
@@ -225,6 +225,26 @@ function handleAddUser(event) {
  */
 function handleTableClick(event) {
   // ... your implementation here ...
+  if (event.target.classList.contains("delete-btn")) {
+    const id = event.target.getAttribute("data-id");
+  }
+fetch("../api/index.php?id=" + id, {
+      method: "DELETE"
+    })
+    .then(response => response.json().then(data => ({ status: response.status, body: data })))
+    .then(result => {
+      if (result.status === 200) {
+        alert("User deleted successfully!");
+        loadUsersAndInitialize();
+      } else {
+        alert(result.body.message || "Something went wrong.");
+      }
+    })
+    .catch(error => {
+      console.error(error);
+      alert("Error connecting to server.");
+    });
+
 }
 
 /**
@@ -240,6 +260,16 @@ function handleTableClick(event) {
  */
 function handleSearch(event) {
   // ... your implementation here ...
+  const searchTerm = searchInput.value.toLowerCase();
+  if (!searchTerm) {
+    renderTable(users);
+    return;
+  }
+  const filteredUsers = users.filter(user => 
+    user.name.toLowerCase().includes(searchTerm) || 
+    user.email.toLowerCase().includes(searchTerm)
+  );
+  renderTable(filteredUsers);
 }
 
 /**
@@ -261,6 +291,28 @@ function handleSearch(event) {
  */
 function handleSort(event) {
   // ... your implementation here ...
+  const columnIndex = event.currentTarget.cellIndex;
+  const columnMap = {
+    0: "name",
+    1: "email",
+    2: "is_admin"
+  };
+  const sortKey = columnMap[columnIndex];
+  if (!sortKey) return;
+  const currentDir = event.currentTarget.getAttribute("data-sort-dir") || "asc";
+  const newDir = currentDir === "asc" ? "desc" : "asc";
+  event.currentTarget.setAttribute("data-sort-dir", newDir);
+  users.sort((a, b) => {
+    let comparison = 0;
+    if (sortKey === "name" || sortKey === "email") {
+      comparison = a[sortKey].localeCompare(b[sortKey]);
+    } else if (sortKey === "is_admin") {
+      comparison = a[sortKey] - b[sortKey];
+    }
+    return newDir === "asc" ? comparison : -comparison;
+  });
+  renderTable(users);
+
 }
 
 /**
@@ -282,6 +334,24 @@ function handleSort(event) {
  */
 async function loadUsersAndInitialize() {
   // ... your implementation here ...
+  try {
+    const response = await fetch("../api/index.php");
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const result = await response.json();
+    if (result.success) {
+      users = result.data;
+      renderTable(users);
+    } else {
+      console.error("Failed to load users.");
+      alert("Error loading users.");
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    alert("Error connecting to server.");
+  }
+
 }
 
 // --- Initial Page Load ---
