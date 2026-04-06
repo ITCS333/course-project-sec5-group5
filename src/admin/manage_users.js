@@ -116,9 +116,13 @@ function handleChangePassword(event) {
     alert("Password must be at least 8 characters.");
     return;
   }
-  currentPassword.value = "";
-  newPassword.value = "";
-  confirmPassword.value = "";
+  if (result.status >= 200 && result.status < 300) {
+    alert("Password updated successfully!");
+
+    currentPasswordInput.value = "";
+    newPasswordInput.value = "";
+    confirmPasswordInput.value = "";
+  }
 
   const id = localStorage.getItem("user_id");
 
