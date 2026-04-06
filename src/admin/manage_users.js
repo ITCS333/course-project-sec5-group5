@@ -116,10 +116,11 @@ function handleChangePassword(event) {
     alert("Password must be at least 8 characters.");
     return;
   }
+   let id = null;
+  if (typeof localStorage !== "undefined") {
+    id = localStorage.getItem("user_id");
+  }
  
-
-  const id = localStorage.getItem("user_id");
-
   fetch("../api/index.php?action=change_password", {
     method: "POST",
     headers: {
