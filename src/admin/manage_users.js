@@ -96,8 +96,7 @@ function renderTable(userArray) {
  */
 function handleChangePassword(event) {
   // ... your implementation here ...
-  if (!event) return;
-  event.preventDefault();
+event.preventDefault();
 
 
   const currentPassword = document.getElementById("current-password").value;
@@ -113,9 +112,9 @@ function handleChangePassword(event) {
     alert("Password must be at least 8 characters.");
     return;
   }
-  currentPassword.value = "";
-  newPassword.value = "";
-  confirmPassword.value = "";
+  document.getElementById("current-password").value = "";
+  document.getElementById("new-password").value = "";
+  document.getElementById("confirm-password").value = "";
 
   const id = localStorage.getItem("user_id");
 
@@ -135,7 +134,6 @@ function handleChangePassword(event) {
       if (result.status >= 200 && result.status < 300) {
         alert("Password updated successfully!");
 
-        changePasswordForm.reset();
       } else {
         alert(result.body.message || "Something went wrong.");
       }
