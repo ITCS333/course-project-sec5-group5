@@ -19,14 +19,19 @@ let users = [];
 // the HTML document is parsed before this script runs.
 
 // TODO: Select the user table body element with id="user-table-body".
+const userTableBody = document.getElementById("user-table-body");
 
 // TODO: Select the "Add User" form with id="add-user-form".
+const addUserForm = document.getElementById("add-user-form");
 
 // TODO: Select the "Change Password" form with id="password-form".
+const changePasswordForm = document.getElementById("password-form");
 
 // TODO: Select the search input field with id="search-input".
+const searchInput = document.getElementById("search-input");
 
 // TODO: Select all table header (th) elements inside the thead of id="user-table".
+const tableHeaders = document.querySelectorAll("#user-table thead th");
 
 // --- Functions ---
 
@@ -43,6 +48,18 @@ let users = [];
  */
 function createUserRow(user) {
   // ... your implementation here ...
+  const row = document.createElement("tr");
+  row.innerHTML = `
+    <td>${user.name}</td>
+    <td>${user.email}</td>
+    <td>${user.is_admin === 1 ? "Yes" : "No"}</td>
+    <td>
+      <button class="edit-btn" data-id="${user.id}">Edit</button>
+      <button class="delete-btn" data-id="${user.id}">Delete</button>
+    </td>
+  `;
+  return row;
+
 }
 
 /**
@@ -55,6 +72,11 @@ function createUserRow(user) {
  */
 function renderTable(userArray) {
   // ... your implementation here ...
+  userTableBody.innerHTML = "";
+  userArray.forEach(user => {
+    const row = createUserRow(user);
+    userTableBody.appendChild(row);
+  });
 }
 
 /**
@@ -74,6 +96,51 @@ function renderTable(userArray) {
  */
 function handleChangePassword(event) {
   // ... your implementation here ...
+  event.preventDefault();
+
+  const currentPassword = document.getElementById("current-password").value;
+  const newPassword = document.getElementById("new-password").value;
+  const confirmPassword = document.getElementById("confirm-password").value;
+
+  if (newPassword !== confirmPassword) {
+    alert("Passwords do not match.");
+    return;
+  }
+
+  if (newPassword.length < 8) {
+    alert("Password must be at least 8 characters.");
+    return;
+  }
+
+  const id = localStorage.getItem("user_id");
+
+  fetch("../api/index.php?action=change_password", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      id: id,
+      current_password: currentPassword,
+      new_password: newPassword
+    })
+  })
+    .then(response => response.json().then(data => ({ status: response.status, body: data })))
+    .then(result => {
+      if (result.status >= 200 && result.status < 300) {
+        alert("Password updated successfully!");
+
+        document.getElementById("current-password").value = "";
+        document.getElementById("new-password").value = "";
+        document.getElementById("confirm-password").value = "";
+      } else {
+        alert(result.body.message || "Something went wrong.");
+      }
+    })
+    .catch(error => {
+      console.error(error);
+      alert("Error connecting to server.");
+    });
 }
 
 /**
@@ -94,6 +161,51 @@ function handleChangePassword(event) {
  */
 function handleAddUser(event) {
   // ... your implementation here ...
+  event.preventDefault();
+  const name = document.getElementById("user-name").value;
+  const email = document.getElementById("user-email").value;
+  const password = document.getElementById("default-password").value;
+  const isAdmin = document.getElementById("is-admin").checked ? 1 : 0;
+  if (!name || !email || !password) {
+    alert("Please fill out all required fields.");
+    return;
+  }
+
+  if (password.length < 8) {
+    alert("Password must be at least 8 characters.");
+    return;
+  }
+  
+  fetch("../api/index.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      name: name,
+      email: email,
+      password: password,
+      is_admin: isAdmin
+    })
+  })
+    .then(response => response.json().then(data => ({ status: response.status, body: data })))
+    .then(result => {
+      if (result.status === 201) {
+        alert("User added successfully!");
+        loadUsersAndInitialize();
+        document.getElementById("user-name").value = "";
+        document.getElementById("user-email").value = "";
+        document.getElementById("default-password").value = "";
+        document.getElementById("is-admin").checked = false;
+      } else {
+        alert(result.body.message || "Something went wrong.");
+      }
+    })
+    .catch(error => {
+      console.error(error);
+      alert("Error connecting to server.");
+    });
+
 }
 
 /**
