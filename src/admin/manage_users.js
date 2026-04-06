@@ -116,11 +116,16 @@ function handleChangePassword(event) {
     alert("Password must be at least 8 characters.");
     return;
   }
-   let id = null;
+  
+  currentPasswordInput.value = "";
+  newPasswordInput.value = "";
+  confirmPasswordInput.value = "";
+
+  let id = null;
   if (typeof localStorage !== "undefined") {
     id = localStorage.getItem("user_id");
   }
- 
+
   fetch("../api/index.php?action=change_password", {
     method: "POST",
     headers: {
@@ -136,9 +141,6 @@ function handleChangePassword(event) {
     .then(result => {
       if (result.status >= 200 && result.status < 300) {
         alert("Password updated successfully!");
-        currentPasswordInput.value = "";
-        newPasswordInput.value = "";
-        confirmPasswordInput.value = "";
 
       } else {
         alert(result.body.message || "Something went wrong.");
