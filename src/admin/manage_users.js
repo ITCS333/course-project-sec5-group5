@@ -117,6 +117,7 @@ function handleChangePassword(event) {
     return;
   }
  
+
   const id = localStorage.getItem("user_id");
 
   fetch("../api/index.php?action=change_password", {
