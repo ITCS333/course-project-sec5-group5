@@ -96,7 +96,6 @@ function renderTable(userArray) {
  */
 function handleChangePassword(event) {
   event.preventDefault();
-  // ... your implementation here ...
 
 
   const currentPassword = document.getElementById("current-password").value;
@@ -131,9 +130,7 @@ function handleChangePassword(event) {
       if (result.status >= 200 && result.status < 300) {
         alert("Password updated successfully!");
 
-        document.getElementById("current-password").value = "";
-        document.getElementById("new-password").value = "";
-        document.getElementById("confirm-password").value = "";
+        changePasswordForm.reset();
       } else {
         alert(result.body.message || "Something went wrong.");
       }
