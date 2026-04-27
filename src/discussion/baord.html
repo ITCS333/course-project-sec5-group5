@@ -46,13 +46,13 @@
                          - label 'for': "topic-subject"
                          - input 'id': "topic-subject", type="text", required -->
                          <label>topic-subject</label> <br>
-                         <input id="topic-subject" type="text" required> <br>
+                         <input id="topic-subject" type="text" name="subject" required> <br>
 
                     <!-- TODO: Add a 'label' and 'textarea' for the main message.
                          - label 'for': "topic-message"
                          - textarea 'id': "topic-message", rows="6", required -->
                          <label>topic-message</label> <br>
-                         <textarea id="topic-message" rows="6" required></textarea><br>
+                         <textarea id="topic-message" name="text" rows="6" required></textarea><br>
 
                     <!-- TODO: Add a 'button' to submit the form.
                          - id="create-topic", type="submit", Text: "Create Topic" -->
@@ -93,9 +93,9 @@
                     <!-- TODO: Add a container (e.g., a 'div') for action buttons. -->
                      <div>
                         <!-- TODO: Add an "Edit" button/link. -->
-                         <input type="button" id="edit" value="Edit">
+                         <input type="button" class="edit-btn" value="Edit">
                         <!-- TODO: Add a "Delete" button/link. -->
-                         <input type="button" id="delete" value="Delete"> <br><br>
+                         <input type="button" class="delete-btn" value="Delete"> <br><br>
                         <!-- NOTE: For the exercise, you can add these for all topics. In a real app,
                              these buttons would only be visible to the topic's author or the admin. -->
                     <!-- End of actions container. -->
@@ -107,8 +107,8 @@
                     <h3> <a href="topic-detail.html">Question about CSS Flexbox</a> </h3>
                     <footer> <p> Posted by: Kawthar Ali on 2026-04-19 </p></footer>
                     <div>
-                        <input type="button" id="edit" value="Edit">
-                        <input type="button" id="delete" value="Delete">
+                        <input type="button" class="edit-btn" value="Edit">
+                        <input type="button" class="delete-btn" value="Delete">
                     </div>
                  </article> 
                  <br>
@@ -117,8 +117,8 @@
                     <h3> <a href="topic-detail.html">Question about CSS Flexbox</a> </h3>
                     <footer> <p> Posted by: Kawthar Ali on 2026-04-19 </p></footer>
                     <div>
-                        <input type="button" id="edit" value="Edit">
-                        <input type="button" id="delete" value="Delete">
+                        <input type="button" class="edit-btn" value="Edit">
+                        <input type="button" class="delete-btn" value="Delete">
                     </div>
                  </article>
             <!-- End of topics container. -->
