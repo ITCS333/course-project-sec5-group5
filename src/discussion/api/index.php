@@ -156,10 +156,9 @@ function getAllTopics(PDO $db): void
 
     // TODO: Fetch all rows as an associative array.
     $topics = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    sendResponse(["success" => true, "data" => $topics]);
 
     // TODO: Call sendResponse(['success' => true, 'data' => $topics]);
-    sendResponse(["success" => true, "data" => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+    sendResponse(["success" => true, "data" => $topics]);
 }
 
 
@@ -324,19 +323,25 @@ function deleteTopic(PDO $db, $id): void
 
     // TODO: Check that a topic with this id exists.
     // If not, sendResponse HTTP 404.
+    $stmt = $db->prepare("SELECT id FROM topics WHERE id = ?");
+    $stmt->execute([$id]);
+
+    if (!$stmt->fetch()) {
+        sendResponse(["success" => false], 404);
+    }
 
     // TODO: DELETE FROM topics WHERE id = ?
     // (replies rows are removed automatically by ON DELETE CASCADE.)
     $stmt = $db->prepare("DELETE FROM topics WHERE id = ?");
     $stmt->execute([$id]);
 
+
     // TODO: If rowCount() > 0, sendResponse HTTP 200.
     // Otherwise sendResponse HTTP 500.
-    $stmt = $db->prepare("SELECT id FROM topics WHERE id = ?");
-    $stmt->execute([$id]);
-
-    if (!$stmt->fetch()) {
-    sendResponse(["success" => false], 404);
+    if ($stmt->rowCount()) {
+        sendResponse(["success" => true]);
+    } else {
+        sendResponse(["success" => false], 500);
     }
 }
 
@@ -400,15 +405,16 @@ function createReply(PDO $db, array $data): void
     }
 
     // TODO: Validate that topic_id is numeric.
-    $stmt = $db->prepare("SELECT id FROM topics WHERE id = ?");
-    $stmt->execute([$data['topic_id']]);
-
     if (!is_numeric($data['topic_id'])) {
-    sendResponse(["success" => false], 400);
-}
+        sendResponse(["success" => false], 400);
+    }
+
 
     // TODO: Check that a topic with this id exists in the topics table.
     // If not, sendResponse HTTP 404.
+    $stmt = $db->prepare("SELECT id FROM topics WHERE id = ?");
+    $stmt->execute([$data['topic_id']]);
+
     if (!$stmt->fetch()) {
         sendResponse(["success" => false], 404);
     }
@@ -425,15 +431,19 @@ function createReply(PDO $db, array $data): void
     // TODO: If rowCount() > 0, sendResponse HTTP 201 with the new id
     //       and the full new reply object.
     // Otherwise sendResponse HTTP 500.
-    $id = $db->lastInsertId();
+     if ($stmt->rowCount()) {
+        $id = $db->lastInsertId();
 
-    $stmt = $db->prepare("SELECT * FROM replies WHERE id = ?");
-    $stmt->execute([$id]);
+        $stmt = $db->prepare("SELECT * FROM replies WHERE id = ?");
+        $stmt->execute([$id]);
 
-    sendResponse([
-        "success" => true,
-        "data" => $stmt->fetch(PDO::FETCH_ASSOC)
-    ], 201);
+        sendResponse([
+            "success" => true,
+            "data" => $stmt->fetch(PDO::FETCH_ASSOC)
+        ], 201);
+    } else {
+        sendResponse(["success" => false], 500);
+    }
 }
 
 
@@ -454,8 +464,11 @@ function deleteReply(PDO $db, $replyId): void
 
     // TODO: Check that the reply exists in the replies table.
     // If not, sendResponse HTTP 404.
+    $stmt = $db->prepare("SELECT id FROM replies WHERE id = ?");
+    $stmt->execute([$replyId]);
+
     if (!$stmt->fetch()) {
-    sendResponse(["success" => false], 404);
+        sendResponse(["success" => false], 404);
     }
 
     // TODO: DELETE FROM replies WHERE id = ?
@@ -464,12 +477,11 @@ function deleteReply(PDO $db, $replyId): void
 
     // TODO: If rowCount() > 0, sendResponse HTTP 200.
     // Otherwise sendResponse HTTP 500.
-     if ($stmt->rowCount()) {
+    if ($stmt->rowCount()) {
         sendResponse(["success" => true]);
     } else {
-        sendResponse(["success" => false], 404);
+        sendResponse(["success" => false], 500);
     }
-    sendResponse(["success" => false, "message" => "Server error"], 500);
 }
 
 
@@ -548,7 +560,7 @@ try {
     // TODO: Log the error with error_log().
     // Return HTTP 500 using sendResponse().
     error_log($e->getMessage());
-    sendResponse(["success" => false], 404);
+    sendResponse(["success" => false], 500);
 
 }
 
