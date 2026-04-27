@@ -65,15 +65,34 @@ let list = document.getElementById("topic-list-container");
 function createTopicArticle(topic) {
   // ... your implementation here ...
   let article = document.createElement("article");
-   <article>
-      <h3><a href="topic.html?id={id}">{subject}</a></h3>
-      <h3><a href="topic.html?id={id}">{subject}</a></h3>
-      <footer>Posted by: {author} on {created_at}</footer>
-      <div>
-        <button class="edit-btn"   data-id="{id}">Edit</button>
-        <button class="delete-btn" data-id="{id}">Delete</button>
-      </div>
-    </article>
+  let h3 = document.createElement("h3");
+  let link = document.createElement("a");
+  link.href = `topic.html?id=${topic.id}`;
+  link.textContent = topic.subject;
+  h3.appendChild(link);
+
+  let footer = document.createElement("footer");
+  footer.textContent = `Posted by: ${topic.author} on ${topic.created_at}`;
+
+  let div = document.createElement("div");
+
+  let editBtn = document.createElement("button");
+  editBtn.className = "edit-btn";
+  editBtn.dataset.id = topic.id;
+  editBtn.textContent = "Edit";
+
+  let deleteBtn = document.createElement("button");
+  deleteBtn.className = "delete-btn";
+  deleteBtn.dataset.id = topic.id;
+  deleteBtn.textContent = "Delete";
+
+  div.appendChild(editBtn);
+  div.appendChild(deleteBtn);
+
+  article.appendChild(h3);
+  article.appendChild(footer);
+  article.appendChild(div);
+
   return article;
 }
 
@@ -88,11 +107,11 @@ function createTopicArticle(topic) {
  */
 function renderTopics() {
   // ... your implementation here ...
-  topicListContainer.innerHTML = "";
+  list.innerHTML = "";
 
-  fruits.forEach(function(fruit) { 
-    let article = createTopicArticle(topic);
-    topicListContainer.appendChild(article);
+  topics.forEach(topic => {
+    const article = createTopicArticle(topic);
+    list.appendChild(article);
   });
 }
 
@@ -119,14 +138,24 @@ async function handleCreateTopic(event) {
   // ... your implementation here ...
   event.preventDefault();
 
-  let subject = subjectInput.value;
-  let message = messageInput.value;
+  let subject = document.getElementById("topic-subject").value;
+  let message = document.getElementById("topic-message").value;
+
+  let submitBtn = form.querySelector("button[type='submit']");
+  let editId = submitBtn.dataset.editId;
+
+  if (editId) {
+    await handleUpdateTopic(editId, { subject, message });
+
+    submitBtn.textContent = "Create Topic";
+    delete submitBtn.dataset.editId;
+    form.reset();
+    return;
+  }
 
   let response = await fetch("./api/index.php", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       subject,
       message,
@@ -137,15 +166,14 @@ async function handleCreateTopic(event) {
   let result = await response.json();
 
   if (result.success) {
-    let newTopic = {
+    topics.push({
       id: result.id,
       subject,
       message,
       author: "Student",
       created_at: new Date().toISOString().slice(0, 19).replace("T", " ")
-    };
+    });
 
-    topics.push(newTopic);
     renderTopics();
     form.reset();
   }
@@ -169,24 +197,26 @@ async function handleUpdateTopic(id, fields) {
   // ... your implementation here ...
   let response = await fetch("./api/index.php", {
     method: "PUT",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      id,
-      subject: fields.subject,
-      message: fields.message
-    })
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, subject: fields.subject, message: fields.message })
   });
 
   let result = await response.json();
 
   if (result.success) {
-    const topic = topics.find(t => t.id == id);
+    let topic = topics.find(t => t.id == id);
+    if (!topic) return;
+
     topic.subject = fields.subject;
     topic.message = fields.message;
 
     renderTopics();
+
+    let submitBtn = form.querySelector("button[type='submit']");
+    submitBtn.textContent = "Create Topic";
+    delete submitBtn.dataset.editId;
+
+    form.reset();
   }
 }
 
@@ -210,6 +240,7 @@ async function handleUpdateTopic(id, fields) {
  */
 async function handleTopicListClick(event) {
   // ... your implementation here ...
+  let target = event.target;
   if (target.classList.contains("delete-btn")) {
     let id = target.dataset.id;
 
@@ -224,18 +255,21 @@ async function handleTopicListClick(event) {
       renderTopics();
     }
   }
-
   if (target.classList.contains("edit-btn")) {
-    const id = target.dataset.id;
+  let id = target.dataset.id;
 
-    const topic = topics.find(t => t.id == id);
+  let topic = topics.find(t => t.id == id);
+  if (!topic) return;
 
-    subjectInput.value = topic.subject;
-    messageInput.value = topic.message;
+  document.getElementById("topic-subject").value = topic.subject;
+  document.getElementById("topic-message").value = topic.message;
 
-    submitBtn.textContent = "Update Topic";
-    submitBtn.dataset.editId = id;
-  }
+  let submitBtn = form.querySelector("button[type='submit']");
+  if (!submitBtn) return;
+
+  submitBtn.textContent = "Update Topic";
+  submitBtn.dataset.editId = id;
+}
 }
 
 /**
@@ -255,14 +289,14 @@ async function loadAndInitialize() {
   // ... your implementation here ...
   let response = await fetch("./api/index.php");
   let result = await response.json();
-  
+
   if (result.success) {
     topics = result.data;
     renderTopics();
   }
 
   form.addEventListener("submit", handleCreateTopic);
-  topicListContainer.addEventListener("click", handleTopicListClick);
+  list.addEventListener("click", handleTopicListClick);
 }
 
 // --- Initial Page Load ---
