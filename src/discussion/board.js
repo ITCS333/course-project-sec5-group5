@@ -30,8 +30,10 @@ let topics = [];
 
 // --- Element Selections ---
 // TODO: Select the new-topic form by id 'new-topic-form'.
+let form = document.getElementById("new-topic-form");
 
 // TODO: Select the topic list container by id 'topic-list-container'.
+let list = document.getElementById("topic-list-container");
 
 // --- Functions ---
 
@@ -62,6 +64,17 @@ let topics = [];
  */
 function createTopicArticle(topic) {
   // ... your implementation here ...
+  let article = document.createElement("article");
+   <article>
+      <h3><a href="topic.html?id={id}">{subject}</a></h3>
+      <h3><a href="topic.html?id={id}">{subject}</a></h3>
+      <footer>Posted by: {author} on {created_at}</footer>
+      <div>
+        <button class="edit-btn"   data-id="{id}">Edit</button>
+        <button class="delete-btn" data-id="{id}">Delete</button>
+      </div>
+    </article>
+  return article;
 }
 
 /**
@@ -75,6 +88,12 @@ function createTopicArticle(topic) {
  */
 function renderTopics() {
   // ... your implementation here ...
+  topicListContainer.innerHTML = "";
+
+  fruits.forEach(function(fruit) { 
+    let article = createTopicArticle(topic);
+    topicListContainer.appendChild(article);
+  });
 }
 
 /**
@@ -98,6 +117,38 @@ function renderTopics() {
  */
 async function handleCreateTopic(event) {
   // ... your implementation here ...
+  event.preventDefault();
+
+  let subject = subjectInput.value;
+  let message = messageInput.value;
+
+  let response = await fetch("./api/index.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      subject,
+      message,
+      author: "Student"
+    })
+  });
+
+  let result = await response.json();
+
+  if (result.success) {
+    let newTopic = {
+      id: result.id,
+      subject,
+      message,
+      author: "Student",
+      created_at: new Date().toISOString().slice(0, 19).replace("T", " ")
+    };
+
+    topics.push(newTopic);
+    renderTopics();
+    form.reset();
+  }
 }
 
 /**
@@ -116,6 +167,27 @@ async function handleCreateTopic(event) {
  */
 async function handleUpdateTopic(id, fields) {
   // ... your implementation here ...
+  let response = await fetch("./api/index.php", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      id,
+      subject: fields.subject,
+      message: fields.message
+    })
+  });
+
+  let result = await response.json();
+
+  if (result.success) {
+    const topic = topics.find(t => t.id == id);
+    topic.subject = fields.subject;
+    topic.message = fields.message;
+
+    renderTopics();
+  }
 }
 
 /**
@@ -138,6 +210,32 @@ async function handleUpdateTopic(id, fields) {
  */
 async function handleTopicListClick(event) {
   // ... your implementation here ...
+  if (target.classList.contains("delete-btn")) {
+    let id = target.dataset.id;
+
+    let response = await fetch(`./api/index.php?id=${id}`, {
+      method: "DELETE"
+    });
+
+    let result = await response.json();
+
+    if (result.success) {
+      topics = topics.filter(t => t.id != id);
+      renderTopics();
+    }
+  }
+
+  if (target.classList.contains("edit-btn")) {
+    const id = target.dataset.id;
+
+    const topic = topics.find(t => t.id == id);
+
+    subjectInput.value = topic.subject;
+    messageInput.value = topic.message;
+
+    submitBtn.textContent = "Update Topic";
+    submitBtn.dataset.editId = id;
+  }
 }
 
 /**
@@ -155,6 +253,16 @@ async function handleTopicListClick(event) {
  */
 async function loadAndInitialize() {
   // ... your implementation here ...
+  let response = await fetch("./api/index.php");
+  let result = await response.json();
+  
+  if (result.success) {
+    topics = result.data;
+    renderTopics();
+  }
+
+  form.addEventListener("submit", handleCreateTopic);
+  topicListContainer.addEventListener("click", handleTopicListClick);
 }
 
 // --- Initial Page Load ---
