@@ -19,11 +19,13 @@ session_start();
 // This tells the browser that we're sending JSON data back
 header('Content-Type: application/json');
 
+
 // TODO: (Optional) Set CORS headers if your frontend and backend are on different domains
 // You'll need headers for Access-Control-Allow-Origin, Methods, and Headers
 header('Access-Control-Allow-Origin: http://localhost:3000'); 
 header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type');
+require_once '../../common/db.php';
 
 
 // --- Check Request Method ---
@@ -31,7 +33,7 @@ header('Access-Control-Allow-Headers: Content-Type');
 // Use the $_SERVER superglobal to check the REQUEST_METHOD
 // If the request is not POST, return an error response and exit
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    
+    http_response_code(405);
     $response = [
         'success' => false,
         'message' => 'Invalid request method. POST required.'
@@ -59,6 +61,7 @@ $data = json_decode($rawData, true);
 // Check if both 'email' and 'password' keys exist in the array
 // If either is missing, return an error response and exit
 if (!isset($data['email']) || !isset($data['password'])){
+    http_response_code(400);
     $response = [
         'success' => false,
         'message' => 'Email and password are required '
@@ -80,6 +83,7 @@ $password = isset($data['password']) ? $data['password'] : null;
 // Use the appropriate filter function for email validation
 // If invalid, return an error response and exit
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    http_response_code(401);
     $response = [
         'success' => false,
         'message' => 'Invalid email format.'
@@ -93,6 +97,7 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 // TODO: Validate the password length (minimum 8 characters)
 // If invalid, return an error response and exit
 if(strlen($password) < 8) {
+    http_response_code(401);
     $response = [
         'success' => false,
         'message' => 'Password must be at least 8 characters long.'
@@ -107,33 +112,30 @@ if(strlen($password) < 8) {
 // TODO: Get the database connection using the provided function
 // Assume getDBConnection() returns a PDO instance with error mode set to exception
 // The function is defined elsewhere (e.g., in a config file or db.php)
-
 try {
-    $conn = getDBConnection();
-    $stmt = $conn->query("SELECT * FROM users");
-    $users = $stmt->fetchAll();
-}
-catch (PDOException $e) {
-    echo "Query failed: " . $e->getMessage();
-}
+    $pdo = getDBConnection();
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} 
+catch (PDOException $e) { 
+    error_log("Connection failed: " . $e->getMessage());
+    exit;
+    }
 
 
 // TODO: Wrap database operations in a try-catch block to handle PDO exceptions
 // This ensures you can return a proper JSON error response if something goes wrong
+
 try {
-    $conn = new PDO("mysql:host=$host;dbname=$database", $user, $password);
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    }
-    catch (PDOException $e) {
-    
-    header('Content-Type: application/json', true, 500);
+    $conn = getDBConnection();
+} catch (PDOException $e) {
+    error_log($e->getMessage());
+    http_response_code(500);
     echo json_encode([
-        "status" => "error",
-        "message" => "Could not connect to the database." 
-       
+        "success" => false,
+        "message" => "Database error."
     ]);
     exit;
-    }
+}
 
     // --- Prepare SQL Query ---
     // TODO: Write a SQL SELECT query to find the user by email
@@ -170,6 +172,7 @@ try {
     // The fetch method returns false if no record matches
     if (!$user) {
         // User not found, return an error response
+        http_response_code(404);
         $response = [
             'success' => false,
             'message' => 'Invalid email or password.'
@@ -178,7 +181,7 @@ try {
         echo json_encode($response);
         exit;
     }
-
+invalid
 
     // TODO: If user exists, verify the password
     // Use password_verify() to compare the submitted password with the hashed password from the database
@@ -215,8 +218,8 @@ try {
         // IMPORTANT: Do NOT include the password in the response
         $response = [
             'success' => true,
-            'message' => 'Login successful.',
-            'user' => [
+            'message' => 'Login successful',
+            'data' => [
                 'id' => $user['id'],
                 'name' => $user['name'],
                 'email' => $user['email'],
@@ -246,6 +249,7 @@ try {
         // SECURITY NOTE: Don't specify whether email or password was wrong
         // This prevents attackers from enumerating valid email addresses
         $response = [
+            http_response_code(401);
             'success' => false,
             'message' => 'Invalid email or password.'
         ];
