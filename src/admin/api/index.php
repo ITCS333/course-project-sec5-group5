@@ -102,15 +102,16 @@ $order = isset($_GET['order']) ? $_GET['order'] : 'asc';
 function getUsers($db) {
     // TODO: Build a SELECT query for id, name, email, is_admin, created_at.
     //       Do NOT select the password column.
+    global $search, $sort, $order;
     $sql = "SELECT id, name, email, is_admin, created_at FROM users";
+    $params = [];
     
     // TODO: If the 'search' query parameter is present, append a WHERE clause:
     //       WHERE name LIKE :search OR email LIKE :search
     //       Wrap the search term with '%' wildcards when binding.
     if ($search) {
         $sql .= " WHERE name LIKE :search OR email LIKE :search";
-        $stmt = $db->prepare($sql);
-        $stmt->execute(["%$search%"]);
+        $params['search'] = "%" . strtolower($search) . "%";
     }
             
 
@@ -129,7 +130,7 @@ function getUsers($db) {
     // TODO: Prepare the statement, bind any parameters, and execute.
     $stmt = $db->prepare($sql);
     if ($search) {
-        $stmt->execute(['search' => "%$search%"]);
+        $stmt->execute($params);
     } else {
         $stmt->execute();
     }
@@ -185,9 +186,9 @@ function getUserById($db, $id) {
 function createUser($db, $data) {
     // TODO: Check that name, email, and password are all present and non-empty.
     //       If any are missing, call sendResponse() with HTTP 400.
-        if (empty($data['name']) || empty($data['email']) || empty($data['password'])) {
-            sendResponse("Name, email, and password are required.", 400);
-        }
+    if (empty($data['name']) || empty($data['email']) || empty($data['password'])) {
+        sendResponse("Name, email, and password are required.", 400);
+    }
 
     // TODO: Trim whitespace from name, email, and password.
     //       Validate email format with filter_var(FILTER_VALIDATE_EMAIL).
@@ -209,6 +210,10 @@ function createUser($db, $data) {
     // TODO: Check whether the email already exists in the users table.
     //       If it does, call sendResponse() with an appropriate message and HTTP 409.
     $stmt = $db->prepare("SELECT id FROM users WHERE email = :email");
+    $stmt->execute(['email' => $email]);
+    if ($stmt->fetch()) {
+        sendResponse("Email already exists.", 409);
+    }
 
     // TODO: Hash the password using password_hash($password, PASSWORD_DEFAULT).
     $passwordHash = password_hash($password, PASSWORD_DEFAULT);
@@ -229,15 +234,25 @@ function createUser($db, $data) {
         'password' => $passwordHash,
         'is_admin' => $isAdmin
     ]);
+    
 
     // TODO: If the insert succeeds, call sendResponse() with the new user's id and HTTP 201.
     //       If it fails, call sendResponse() with HTTP 500.
+    try {
+    $stmt = $db->prepare("INSERT INTO users (name, email) VALUES (?, ?)");
+    $stmt->execute([$name, $email]);
+
     $newUserId = $db->lastInsertId();
-    if ($newUserId) {
-        sendResponse(['id' => $newUserId], 201);
+    sendResponse(['id' => $newUserId], 201);
+
+} catch (PDOException $e) {
+        
+    if ($e->getCode() == 23000) {
+        sendResponse("Email already exists.", 409);
     } else {
         sendResponse("Failed to create user.", 500);
     }
+}
 }
 
 
