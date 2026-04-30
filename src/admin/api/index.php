@@ -213,6 +213,7 @@ function createUser($db, $data) {
     $stmt->execute(['email' => $email]);
     if ($stmt->fetch()) {
         sendResponse("Email already exists.", 409);
+        exit;
     }
     
     // TODO: Hash the password using password_hash($password, PASSWORD_DEFAULT).
