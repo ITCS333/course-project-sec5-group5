@@ -11,6 +11,7 @@
 // TODO: Start a PHP session using session_start()
 // This must be called before any output is sent to the browser
 // Sessions allow us to store user data across multiple pages
+include '../../common/db.php';
 session_start();
 
 
@@ -25,7 +26,7 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: http://localhost:3000'); 
 header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type');
-require_once '../../common/db.php';
+
 
 
 // --- Check Request Method ---
@@ -33,7 +34,7 @@ require_once '../../common/db.php';
 // Use the $_SERVER superglobal to check the REQUEST_METHOD
 // If the request is not POST, return an error response and exit
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
+    
     $response = [
         'success' => false,
         'message' => 'Invalid request method. POST required.'
