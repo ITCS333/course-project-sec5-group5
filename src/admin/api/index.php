@@ -209,11 +209,7 @@ function createUser($db, $data) {
 
     // TODO: Check whether the email already exists in the users table.
     //       If it does, call sendResponse() with an appropriate message and HTTP 409.
-    $stmt = $db->prepare("SELECT id FROM users WHERE email = :email");
-    $stmt->execute(['email' => $email]);
-    if ($stmt->fetch()) {
-        sendResponse("Email already exists.", 409);
-    }
+    
 
     // TODO: Hash the password using password_hash($password, PASSWORD_DEFAULT).
     $passwordHash = password_hash($password, PASSWORD_DEFAULT);
