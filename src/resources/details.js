@@ -16,6 +16,7 @@
   3. Implement the TODOs below.
 */
 
+
 // --- Global Data Store ---
 // These will hold the data related to this specific resource.
 let currentResourceId = null;
@@ -23,7 +24,12 @@ let currentComments = [];
 
 // --- Element Selections ---
 // TODO: Select all the elements you added IDs for in step 2.
-
+const titleEl = document.querySelector('#resource-title');
+const descriptionEl = document.querySelector('#resource-description');
+const linkEl = document.querySelector('#resource-link');
+const commentList = document.querySelector('#comment-list');
+const commentForm = document.querySelector('#comment-form');
+const newCommentInput = document.querySelector('#new-comment');
 // --- Functions ---
 
 /**
@@ -34,7 +40,8 @@ let currentComments = [];
  * 3. Return the id value (as a string).
  */
 function getResourceIdFromURL() {
-  // ... your implementation here ...
+  const params = new URLSearchParams(window.location.search);
+  return params.get('id');
 }
 
 /**
@@ -50,6 +57,9 @@ function getResourceIdFromURL() {
  */
 function renderResourceDetails(resource) {
   // ... your implementation here ...
+  titleEl.textContent = resource.title;
+  descriptionEl.textContent = resource.description;
+  linkEl.href = resource.link;
 }
 
 /**
@@ -62,6 +72,12 @@ function renderResourceDetails(resource) {
  */
 function createCommentArticle(comment) {
   // ... your implementation here ...
+  const article = document.createElement('article');
+  article.innerHTML = `
+    <p>${comment.text}</p>
+    <footer>Posted by: ${comment.author}</footer>
+  `;
+  return article;
 }
 
 /**
@@ -73,7 +89,10 @@ function createCommentArticle(comment) {
  *    append the returned <article> to the comment list container.
  */
 function renderComments() {
-  // ... your implementation here ...
+  commentList.innerHTML = '';
+  currentComments.forEach(comment => {
+    commentList.appendChild(createCommentArticle(comment));
+  });
 }
 
 /**
@@ -99,7 +118,27 @@ function renderComments() {
  * 7. Clear the textarea.
  */
 function handleAddComment(event) {
-  // ... your implementation here ...
+event.preventDefault();
+  const text = newCommentInput.value.trim();
+  
+  if (!text) return;
+
+  const response = await fetch('./api/index.php?action=comment', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      resource_id: currentResourceId,
+      author: 'Student',
+      text: text
+    })
+  });
+
+  const result = await response.json();
+  if (result.success) {
+    currentComments.push(result.data);
+    renderComments();
+    newCommentInput.value = '';
+  }
 }
 
 /**
@@ -125,7 +164,29 @@ function handleAddComment(event) {
  * 6. If the resource is not found, display an error in the title element.
  */
 async function initializePage() {
-  // ... your implementation here ...
+  currentResourceId = getResourceIdFromURL();
+
+  if (!currentResourceId) {
+    titleEl.textContent = "Resource not found.";
+    return;
+  }
+
+  const [resourceRes, commentsRes] = await Promise.all([
+    fetch(`./api/index.php?id=${currentResourceId}`),
+    fetch(`./api/index.php?resource_id=${currentResourceId}&action=comments`)
+  ]);
+
+  const resourceData = await resourceRes.json();
+  const commentsData = await commentsRes.json();
+
+  if (resourceData.success) {
+    renderResourceDetails(resourceData.data);
+    currentComments = commentsData.data || [];
+    renderComments();
+    commentForm.addEventListener('submit', handleAddComment);
+  } else {
+    titleEl.textContent = "Resource not found.";
+  }
 }
 
 // --- Initial Page Load ---
