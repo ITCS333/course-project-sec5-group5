@@ -182,7 +182,7 @@ try {
         echo json_encode($response);
         exit;
     }
-invalid
+
 
     // TODO: If user exists, verify the password
     // Use password_verify() to compare the submitted password with the hashed password from the database
