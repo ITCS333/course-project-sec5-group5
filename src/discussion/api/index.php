@@ -180,7 +180,7 @@ function getTopicById(PDO $db, $id): void
 
     // TODO: SELECT id, subject, message, author, created_at
     //       FROM topics WHERE id = ?
-    $stmt = $db->prepare("SELECT id, subject, message, author, created_at WHERE id = ?");
+    $stmt = $db->prepare("SELECT id, subject, message, author, created_at FROM topics WHERE id = ?");
     $stmt->execute([$id]);
 
     // TODO: Fetch one row.
@@ -234,6 +234,7 @@ function createTopic(PDO $db, array $data): void
     if ($stmt->rowCount()) {
     sendResponse([
         "success" => true,
+        "message" => "Topic created successfully",
         "id" => $db->lastInsertId()
     ], 201);
     } else {
@@ -271,7 +272,10 @@ function updateTopic(PDO $db, array $data): void
     $stmt->execute([$data['id']]);
 
     if (!$stmt->fetch()) {
-        sendResponse(["success" => false], 404);
+        sendResponse([
+             "success" => false, 
+             "message" => "Not found"
+             ], 404);
     }
 
     // TODO: Dynamically build the SET clause for whichever of
@@ -340,7 +344,10 @@ function deleteTopic(PDO $db, $id): void
     $stmt->execute([$id]);
 
     if (!$stmt->fetch()) {
-        sendResponse(["success" => false], 404);
+        sendResponse([
+             "success" => false, 
+             "message" => "Not found"
+             ], 404);
     }
 
     // TODO: DELETE FROM topics WHERE id = ?
@@ -352,11 +359,17 @@ function deleteTopic(PDO $db, $id): void
     // TODO: If rowCount() > 0, sendResponse HTTP 200.
     // Otherwise sendResponse HTTP 500.
     if ($stmt->rowCount()) {
-        if ($stmt->rowCount()) {
-    sendResponse(["success" => true, "message" => "Updated"]);
+    sendResponse([
+        "success" => true,
+        "message" => "Deleted successfully"
+    ]);
+    } else {
+    sendResponse([
+        "success" => false,
+        "message" => "Delete failed"
+    ], 500);
     } else {
     sendResponse(["success" => false, "message" => "No changes"], 500);
-    }
     } else {
         sendResponse(["success" => false], 500);
     }
@@ -391,7 +404,7 @@ function getRepliesByTopicId(PDO $db, $topicId): void
     //       FROM replies
     //       WHERE topic_id = ?
     //       ORDER BY created_at ASC
-    $stmt = $db->prepare("SELECT * FROM replies WHERE topic_id = ? ORDER BY created_at ASC");
+    $stmt = $db->prepare("SELECT id, topic_id, text, author, created_at FROM replies WHERE topic_id = ? ORDER BY created_at ASC");
     $stmt->execute([$topicId]);
 
 
@@ -442,7 +455,10 @@ function createReply(PDO $db, array $data): void
     $stmt->execute([$data['topic_id']]);
 
     if (!$stmt->fetch()) {
-        sendResponse(["success" => false], 404);
+        sendResponse([
+             "success" => false, 
+             "message" => "Not found"
+             ], 404);
     }
 
     // TODO: INSERT INTO replies (topic_id, text, author) VALUES (?, ?, ?)
@@ -457,16 +473,22 @@ function createReply(PDO $db, array $data): void
     // TODO: If rowCount() > 0, sendResponse HTTP 201 with the new id
     //       and the full new reply object.
     // Otherwise sendResponse HTTP 500.
-     if ($stmt->rowCount()) {
+    if ($stmt->rowCount()) {
         $id = $db->lastInsertId();
 
-        $stmt = $db->prepare("SELECT * FROM replies WHERE id = ?");
+        $stmt = $db->prepare("SELECT id, topic_id, text, author, created_at FROM replies WHERE id = ?");
+        $stmt->execute([$id]);
+
+        $id = $db->lastInsertId();
+
+        $stmt = $db->prepare("SELECT id, topic_id, text, author, created_at FROM replies WHERE id = ?");
         $stmt->execute([$id]);
 
         sendResponse([
             "success" => true,
-            "message" => "Topic created successfully",
-            "id" => $db->lastInsertId()
+            "message" => "Reply created successfully",
+            "id" => $id,
+            "data" => $stmt->fetch(PDO::FETCH_ASSOC)
             ], 201);
     } else {
         sendResponse(["success" => false], 500);
@@ -498,7 +520,10 @@ function deleteReply(PDO $db, $replyId): void
     $stmt->execute([$replyId]);
 
     if (!$stmt->fetch()) {
-        sendResponse(["success" => false], 404);
+        sendResponse([
+             "success" => false, 
+             "message" => "Not found"
+             ], 404);
     }
 
     // TODO: DELETE FROM replies WHERE id = ?
@@ -508,13 +533,15 @@ function deleteReply(PDO $db, $replyId): void
     // TODO: If rowCount() > 0, sendResponse HTTP 200.
     // Otherwise sendResponse HTTP 500.
     if ($stmt->rowCount()) {
-        if ($stmt->rowCount()) {
-    sendResponse(["success" => true, "message" => "Updated"]);
+    sendResponse([
+        "success" => true,
+        "message" => "Deleted successfully"
+    ]);
     } else {
-    sendResponse(["success" => false, "message" => "No changes"], 500);
-    }
-    } else {
-        sendResponse(["success" => false], 500);
+    sendResponse([
+        "success" => false,
+        "message" => "Delete failed"
+    ], 500);
     }
 }
 
