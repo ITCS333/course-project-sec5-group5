@@ -180,7 +180,7 @@ function getTopicById(PDO $db, $id): void
 
     // TODO: SELECT id, subject, message, author, created_at
     //       FROM topics WHERE id = ?
-    $stmt = $db->prepare("SELECT * FROM topics WHERE id = ?");
+    $stmt = $db->prepare("SELECT id, subject, message, author, created_at WHERE id = ?");
     $stmt->execute([$id]);
 
     // TODO: Fetch one row.
@@ -259,7 +259,10 @@ function updateTopic(PDO $db, array $data): void
     // TODO: Validate that $data['id'] is present.
     // If not, sendResponse HTTP 400.
     if (empty($data['id'])) {
-        sendResponse(["success" => false], 400);
+        sendResponse([
+            "success" => false,
+            "message" => "Invalid request"
+            ], 400);
     }
 
     // TODO: Check that a topic with this id exists.
@@ -287,7 +290,10 @@ function updateTopic(PDO $db, array $data): void
 
     // TODO: If no updatable fields are present, sendResponse HTTP 400.
     if (empty($fields)) {
-        sendResponse(["success" => false], 400);
+        sendResponse([
+            "success" => false,
+            "message" => "Invalid request"
+            ], 400);
     }
 
     // TODO: Build: UPDATE topics SET {clauses} WHERE id = ?
@@ -298,7 +304,11 @@ function updateTopic(PDO $db, array $data): void
     $stmt->execute($values);
 
     // TODO: sendResponse HTTP 200 on success, HTTP 500 on failure.
-    sendResponse(["success" => true]);
+    if ($stmt->rowCount()) {
+    sendResponse(["success" => true, "message" => "Updated"]);
+    } else {
+    sendResponse(["success" => false, "message" => "No changes"], 500);
+    }
 }
 
 
@@ -318,7 +328,10 @@ function deleteTopic(PDO $db, $id): void
     // TODO: Validate that $id is provided and numeric.
     // If not, sendResponse HTTP 400.
     if (!$id || !is_numeric($id)) {
-        sendResponse(["success" => false], 400);
+        sendResponse([
+            "success" => false,
+            "message" => "Invalid request"
+            ], 400);
     }
 
     // TODO: Check that a topic with this id exists.
@@ -339,7 +352,11 @@ function deleteTopic(PDO $db, $id): void
     // TODO: If rowCount() > 0, sendResponse HTTP 200.
     // Otherwise sendResponse HTTP 500.
     if ($stmt->rowCount()) {
-        sendResponse(["success" => true]);
+        if ($stmt->rowCount()) {
+    sendResponse(["success" => true, "message" => "Updated"]);
+    } else {
+    sendResponse(["success" => false, "message" => "No changes"], 500);
+    }
     } else {
         sendResponse(["success" => false], 500);
     }
@@ -364,7 +381,10 @@ function getRepliesByTopicId(PDO $db, $topicId): void
     // TODO: Validate that $topicId is provided and numeric.
     // If not, sendResponse HTTP 400.
     if (!$topicId || !is_numeric($topicId)) {
-        sendResponse(["success" => false], 400);
+        sendResponse([
+            "success" => false,
+            "message" => "Invalid request"
+            ], 400);
     }
 
     // TODO: SELECT id, topic_id, text, author, created_at
@@ -401,12 +421,18 @@ function createReply(PDO $db, array $data): void
     // TODO: Validate that topic_id, text, and author are all present and
     // non-empty after trimming. If any are missing, sendResponse HTTP 400.
     if (empty($data['topic_id']) || empty($data['text']) || empty($data['author'])) {
-        sendResponse(["success" => false], 400);
+        sendResponse([
+            "success" => false,
+            "message" => "Invalid request"
+            ], 400);
     }
 
     // TODO: Validate that topic_id is numeric.
     if (!is_numeric($data['topic_id'])) {
-        sendResponse(["success" => false], 400);
+        sendResponse([
+            "success" => false,
+            "message" => "Invalid request"
+            ], 400);
     }
 
 
@@ -439,8 +465,9 @@ function createReply(PDO $db, array $data): void
 
         sendResponse([
             "success" => true,
-            "data" => $stmt->fetch(PDO::FETCH_ASSOC)
-        ], 201);
+            "message" => "Topic created successfully",
+            "id" => $db->lastInsertId()
+            ], 201);
     } else {
         sendResponse(["success" => false], 500);
     }
@@ -459,7 +486,10 @@ function deleteReply(PDO $db, $replyId): void
     // TODO: Validate that $replyId is provided and numeric.
     // If not, sendResponse HTTP 400.
     if (!$replyId || !is_numeric($replyId)) {
-        sendResponse(["success" => false], 400);
+        sendResponse([
+            "success" => false,
+            "message" => "Invalid request"
+            ], 400);
     }
 
     // TODO: Check that the reply exists in the replies table.
@@ -478,7 +508,11 @@ function deleteReply(PDO $db, $replyId): void
     // TODO: If rowCount() > 0, sendResponse HTTP 200.
     // Otherwise sendResponse HTTP 500.
     if ($stmt->rowCount()) {
-        sendResponse(["success" => true]);
+        if ($stmt->rowCount()) {
+    sendResponse(["success" => true, "message" => "Updated"]);
+    } else {
+    sendResponse(["success" => false, "message" => "No changes"], 500);
+    }
     } else {
         sendResponse(["success" => false], 500);
     }
