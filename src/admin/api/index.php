@@ -111,9 +111,11 @@ function getUsers($db) {
     // TODO: If the 'search' query parameter is present, append a WHERE clause:
     //       WHERE name LIKE :search OR email LIKE :search
     //       Wrap the search term with '%' wildcards when binding.
-    if (!empty($_GET['search'])) {
+    global $search;
+
+    if (!empty($search)) {
         $sql .= " WHERE name LIKE :search OR email LIKE :search";
-        $params['search'] = '%' . $_GET['search'] . '%';
+        $params['search'] = '%' . $search . '%';
     }
             
 
@@ -309,7 +311,7 @@ function updateUser($db, $data) {
     }
 
     if (empty($fields)) {
-        sendResponse(true, "No fields updated.", 200);
+    sendResponse(false, "No valid fields provided.", 400);
     }
         
     // TODO: Prepare the UPDATE statement, bind parameters, and execute.
@@ -511,7 +513,7 @@ try {
  *                          On error, pass a string message.
  * @param int   $statusCode HTTP status code (default 200).
  */
-function sendResponse($data, $statusCode = 200) {
+function sendResponse($success, $data, $statusCode = 200) {
     // TODO: Call http_response_code($statusCode).
     http_response_code($statusCode);
 
@@ -519,7 +521,7 @@ function sendResponse($data, $statusCode = 200) {
     //         json_encode(['success' => true, 'data' => $data])
     //       Otherwise echo:
     //         json_encode(['success' => false, 'message' => $data])
-    if ($statusCode < 400) {
+    if ($success) {
         echo json_encode(['success' => true, 'data' => $data]);
     } else {
         echo json_encode(['success' => false, 'message' => $data]);
