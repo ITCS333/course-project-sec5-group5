@@ -58,7 +58,7 @@ require_once 'db.php';
 
 
 // TODO: Get the PDO database connection by calling getDBConnection().
-$pdo = getDBConnection();
+$db = getDBConnection();
 
 // TODO: Read the HTTP request method from $_SERVER['REQUEST_METHOD'].
 $method = $_SERVER['REQUEST_METHOD'];
@@ -450,18 +450,18 @@ try {
         // TODO: If the 'id' query parameter is present and non-empty, call getUserById($db, $id).
         // TODO: Otherwise, call getUsers($db) (supports optional search/sort parameters).
         if (!empty($id)) {
-            getUserById($pdo, $id);
+            getUserById($db, $id);
         } else {
-            getUsers($pdo);
+            getUsers($db);
         }    
 
         } elseif ($method === 'POST') {    
         // TODO: If the 'action' query parameter equals 'change_password', call changePassword($db, $data).
         // TODO: Otherwise, call createUser($db, $data).
         if ($action === 'change_password') {
-            changePassword($pdo, $inputData);
+            changePassword($db, $inputData);
         } else {
-            createUser($pdo, $inputData);
+            createUser($db, $inputData);
         }
 
     } elseif ($method === 'PUT') {
@@ -469,14 +469,14 @@ try {
     
         // TODO: Call updateUser($db, $data).
         //       The user id to update comes from the JSON body, not the query string.
-        updateUser($pdo, $inputData);
+        updateUser($db, $inputData);
 
     } elseif ($method === 'DELETE') {
 
     
         // TODO: Read the 'id' query parameter.
         // TODO: Call deleteUser($db, $id).
-        deleteUser($pdo, $id);
+        deleteUser($db, $id);
 
     } else {  
         // TODO: Return HTTP 405 (Method Not Allowed) with a JSON error message.
