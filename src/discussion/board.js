@@ -30,10 +30,13 @@ let topics = [];
 
 // --- Element Selections ---
 // TODO: Select the new-topic form by id 'new-topic-form'.
-let form = document.getElementById("new-topic-form");
+const topicForm = document.getElementById('new-topic-form');
 
 // TODO: Select the topic list container by id 'topic-list-container'.
-let list = document.getElementById("topic-list-container");
+const topicListContainer = document.getElementById('topic-list-container');
+const subjectInput = document.getElementById('topic-subject');
+const messageInput = document.getElementById('topic-message');
+const submitBtn = document.getElementById('create-topic');
 
 // --- Functions ---
 
@@ -64,36 +67,16 @@ let list = document.getElementById("topic-list-container");
  */
 function createTopicArticle(topic) {
   // ... your implementation here ...
-  let article = document.createElement("article");
-  let h3 = document.createElement("h3");
-  let link = document.createElement("a");
-  link.href = `topic.html?id=${topic.id}`;
-  link.textContent = topic.subject;
-  h3.appendChild(link);
-
-  let footer = document.createElement("footer");
-  footer.textContent = `Posted by: ${topic.author} on ${topic.created_at}`;
-
-  let div = document.createElement("div");
-
-  let editBtn = document.createElement("button");
-  editBtn.className = "edit-btn";
-  editBtn.dataset.id = topic.id;
-  editBtn.textContent = "Edit";
-
-  let deleteBtn = document.createElement("button");
-  deleteBtn.className = "delete-btn";
-  deleteBtn.dataset.id = topic.id;
-  deleteBtn.textContent = "Delete";
-
-  div.appendChild(editBtn);
-  div.appendChild(deleteBtn);
-
-  article.appendChild(h3);
-  article.appendChild(footer);
-  article.appendChild(div);
-
-  return article;
+  const article = document.createElement('article');
+    article.innerHTML = `
+        <h3><a href="topic.html?id=${topic.id}">${topic.subject}</a></h3>
+        <footer>Posted by: ${topic.author} on ${topic.created_at}</footer>
+        <div>
+            <button class="edit-btn" data-id="${topic.id}">Edit</button>
+            <button class="delete-btn" data-id="${topic.id}">Delete</button>
+        </div>
+    `;
+    return article;
 }
 
 /**
@@ -107,12 +90,10 @@ function createTopicArticle(topic) {
  */
 function renderTopics() {
   // ... your implementation here ...
-  list.innerHTML = "";
-
-  topics.forEach(topic => {
-    const article = createTopicArticle(topic);
-    list.appendChild(article);
-  });
+  topicListContainer.innerHTML = "";
+    topics.forEach(topic => {
+        topicListContainer.appendChild(createTopicArticle(topic));
+    });
 }
 
 /**
@@ -137,46 +118,40 @@ function renderTopics() {
 async function handleCreateTopic(event) {
   // ... your implementation here ...
   event.preventDefault();
+    
+    const subject = subjectInput.value;
+    const message = messageInput.value;
+    const editId = submitBtn.getAttribute('data-edit-id');
 
-  let subject = document.getElementById("topic-subject").value;
-  let message = document.getElementById("topic-message").value;
-
-  let submitBtn = form.querySelector("button[type='submit']");
-  let editId = submitBtn.dataset.editId;
-
-  if (editId) {
-    await handleUpdateTopic(editId, { subject, message });
-
-    submitBtn.textContent = "Create Topic";
-    delete submitBtn.dataset.editId;
-    form.reset();
-    return;
-  }
-
-  let response = await fetch("./api/index.php", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      subject,
-      message,
-      author: "Student"
-    })
-  });
-
-  let result = await response.json();
-
-  if (result.success) {
-    topics.push({
-      id: result.id,
-      subject,
-      message,
-      author: "Student",
-      created_at: new Date().toISOString().slice(0, 19).replace("T", " ")
-    });
-
-    renderTopics();
-    form.reset();
-  }
+    // If editId exists, we are UPDATING, not CREATING
+    if (editId) {
+        await handleUpdateTopic(parseInt(editId), { subject, message });
+        submitBtn.textContent = "Create Topic";
+        submitBtn.removeAttribute('data-edit-id');
+    } else {
+        try {
+            const response = await fetch('./api/index.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ subject, message, author: "Student" })
+            });
+            const result = await response.json();
+            if (result.success) {
+                // Add new topic to local array (mocking the date for immediate display)
+                topics.push({
+                    id: result.id,
+                    subject,
+                    message,
+                    author: "Student",
+                    created_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+                });
+                renderTopics();
+            }
+        } catch (error) {
+            console.error("Error creating topic:", error);
+        }
+    }
+    topicForm.reset();
 }
 
 /**
@@ -195,29 +170,24 @@ async function handleCreateTopic(event) {
  */
 async function handleUpdateTopic(id, fields) {
   // ... your implementation here ...
-  let response = await fetch("./api/index.php", {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id, subject: fields.subject, message: fields.message })
-  });
-
-  let result = await response.json();
-
-  if (result.success) {
-    let topic = topics.find(t => t.id == id);
-    if (!topic) return;
-
-    topic.subject = fields.subject;
-    topic.message = fields.message;
-
-    renderTopics();
-
-    let submitBtn = form.querySelector("button[type='submit']");
-    submitBtn.textContent = "Create Topic";
-    delete submitBtn.dataset.editId;
-
-    form.reset();
-  }
+  try {
+        const response = await fetch('./api/index.php', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, ...fields })
+        });
+        const result = await response.json();
+        if (result.success) {
+            const index = topics.findIndex(t => t.id === id);
+            if (index !== -1) {
+                topics[index].subject = fields.subject;
+                topics[index].message = fields.message;
+                renderTopics();
+            }
+        }
+    } catch (error) {
+        console.error("Error updating topic:", error);
+    }
 }
 
 /**
@@ -240,36 +210,31 @@ async function handleUpdateTopic(id, fields) {
  */
 async function handleTopicListClick(event) {
   // ... your implementation here ...
-  let target = event.target;
-  if (target.classList.contains("delete-btn")) {
-    let id = target.dataset.id;
+  const id = parseInt(event.target.dataset.id);
+    if (!id) return;
 
-    let response = await fetch(`./api/index.php?id=${id}`, {
-      method: "DELETE"
-    });
-
-    let result = await response.json();
-
-    if (result.success) {
-      topics = topics.filter(t => t.id != id);
-      renderTopics();
+    if (event.target.classList.contains('delete-btn')) {
+        try {
+            const response = await fetch(`./api/index.php?id=${id}`, { method: 'DELETE' });
+            const result = await response.json();
+            if (result.success) {
+                topics = topics.filter(t => t.id !== id);
+                renderTopics();
+            }
+        } catch (error) {
+            console.error("Error deleting topic:", error);
+        }
     }
-  }
-  if (target.classList.contains("edit-btn")) {
-  let id = target.dataset.id;
 
-  let topic = topics.find(t => t.id == id);
-  if (!topic) return;
-
-  document.getElementById("topic-subject").value = topic.subject;
-  document.getElementById("topic-message").value = topic.message;
-
-  let submitBtn = form.querySelector("button[type='submit']");
-  if (!submitBtn) return;
-
-  submitBtn.textContent = "Update Topic";
-  submitBtn.dataset.editId = id;
-}
+    if (event.target.classList.contains('edit-btn')) {
+        const topic = topics.find(t => t.id === id);
+        if (topic) {
+            subjectInput.value = topic.subject;
+            messageInput.value = topic.message;
+            submitBtn.textContent = "Update Topic";
+            submitBtn.setAttribute('data-edit-id', id);
+        }
+    }
 }
 
 /**
@@ -287,16 +252,19 @@ async function handleTopicListClick(event) {
  */
 async function loadAndInitialize() {
   // ... your implementation here ...
-  let response = await fetch("./api/index.php");
-  let result = await response.json();
+  try {
+        const response = await fetch('./api/index.php');
+        const result = await response.json();
+        if (result.success) {
+            topics = result.data;
+            renderTopics();
+        }
+    } catch (error) {
+        console.error("Loading error:", error);
+    }
 
-  if (result.success) {
-    topics = result.data;
-    renderTopics();
-  }
-
-  form.addEventListener("submit", handleCreateTopic);
-  list.addEventListener("click", handleTopicListClick);
+    topicForm.addEventListener('submit', handleCreateTopic);
+    topicListContainer.addEventListener('click', handleTopicListClick);
 }
 
 // --- Initial Page Load ---
