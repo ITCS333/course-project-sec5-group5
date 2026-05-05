@@ -23,7 +23,9 @@
 <body>
 
     <!-- TODO: Create a 'header' with a main heading ('h1') "General Discussion Board". -->
-     <header> <h1> General Discussion Board </h1> </header>
+     <header> 
+          <h1> General Discussion Board </h1> 
+     </header>
      
 
     <!-- TODO: Create the 'main' content area. -->
@@ -45,18 +47,20 @@
                     <!-- TODO: Add a 'label' and 'input' for the topic subject.
                          - label 'for': "topic-subject"
                          - input 'id': "topic-subject", type="text", required -->
-                         <label>topic-subject</label> <br>
+                         <label for="topic-subject">Subject</label><br>
                          <input id="topic-subject" type="text" name="subject" required> <br>
 
                     <!-- TODO: Add a 'label' and 'textarea' for the main message.
                          - label 'for': "topic-message"
                          - textarea 'id': "topic-message", rows="6", required -->
-                         <label>topic-message</label> <br>
-                         <textarea id="topic-message" name="text" rows="6" required></textarea><br>
+                         <label for="topic-message">Message</label><br>
+                         <textarea id="topic-message" name="message" rows="6" required></textarea><br>
 
                     <!-- TODO: Add a 'button' to submit the form.
                          - id="create-topic", type="submit", Text: "Create Topic" -->
-                         <input id="create-topic" type="submit" value="Create Topic">
+                         <label for="topic-author">Your Name</label><br>
+                         <input id="topic-author" type="text" name="author" required><br><br>
+                         <button id="create-topic" type="submit">Create Topic</button>
                 <!-- End of fieldset. -->
                  </fieldset>
             <!-- End of form. -->
@@ -69,10 +73,10 @@
         <!-- TODO: Create a 'section' to display the list of current topics. -->
          <section>
             <!-- TODO: Add a sub-heading ('h2') "All Topics". -->
-             <h2> All Topics </h2>
+             <h2>All Topics</h2>
             
             <!-- TODO: Add a container (like a 'div') to hold the list of topics. -->
-             <div>
+             <div id="topics-list">
                 <!-- TODO: Add 2-3 dummy topics using the structure below. -->
 
                 <!-- Example Topic 1: -->
@@ -81,7 +85,9 @@
                     <!-- TODO: Add a heading ('h3') containing an anchor tag ('a') linking to the detail page.
                          - The link's 'href' can be "topic-detail.html" for now.
                          - The link text should be a dummy topic title, e.g., "Question about CSS Flexbox". -->
-                         <h3> <a href="topic-detail.html">Question about CSS Flexbox</a> </h3>
+                         <h3> 
+                              <a href="topic-detail.html">Question about CSS Flexbox</a> 
+                         </h3>
                     
                     <!-- TODO: Use a 'footer' element for metadata. -->
                      <footer>
@@ -93,9 +99,9 @@
                     <!-- TODO: Add a container (e.g., a 'div') for action buttons. -->
                      <div>
                         <!-- TODO: Add an "Edit" button/link. -->
-                         <input type="button" class="edit-btn" value="Edit">
+                         <button class="edit-btn">Edit</button>
                         <!-- TODO: Add a "Delete" button/link. -->
-                         <input type="button" class="delete-btn" value="Delete"> <br><br>
+                         <button class="delete-btn">Delete</button>
                         <!-- NOTE: For the exercise, you can add these for all topics. In a real app,
                              these buttons would only be visible to the topic's author or the admin. -->
                     <!-- End of actions container. -->
@@ -103,24 +109,6 @@
                 <!-- End of article. -->
                  </article>
                  
-                 <article> 
-                    <h3> <a href="topic-detail.html">Question about CSS Flexbox</a> </h3>
-                    <footer> <p> Posted by: Kawthar Ali on 2026-04-19 </p></footer>
-                    <div>
-                        <input type="button" class="edit-btn" value="Edit">
-                        <input type="button" class="delete-btn" value="Delete">
-                    </div>
-                 </article> 
-                 <br>
-                 
-                 <article>
-                    <h3> <a href="topic-detail.html">Question about CSS Flexbox</a> </h3>
-                    <footer> <p> Posted by: Kawthar Ali on 2026-04-19 </p></footer>
-                    <div>
-                        <input type="button" class="edit-btn" value="Edit">
-                        <input type="button" class="delete-btn" value="Delete">
-                    </div>
-                 </article>
             <!-- End of topics container. -->
              </div>
         <!-- End of list section. -->
