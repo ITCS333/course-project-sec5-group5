@@ -92,7 +92,7 @@ function renderTable() {
 async function handleAddResource(event) {
 // ... your implementation here ...
   event.preventDefault();
-
+try{
     const title = document.querySelector('#resource-title').value;
     const description = document.querySelector('#resource-description').value;
     const link = document.querySelector('#resource-link').value;
@@ -134,7 +134,10 @@ if (editId) {
     }
 
     renderTable();
-    resourceForm.reset();
+    resourceForm.reset();}
+  catch(error){
+  console.error('error adding resource:',error)
+  }
 
 }
 /**
