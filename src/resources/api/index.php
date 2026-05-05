@@ -1,4 +1,4 @@
-<?php
+ <?php
 /**
  * Course Resources API
  * 
@@ -726,5 +726,3 @@ function validateRequiredFields($data, $requiredFields) {
 }
 
 ?>
-
-
