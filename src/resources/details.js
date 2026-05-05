@@ -73,12 +73,15 @@ function renderResourceDetails(resource) {
 function createCommentArticle(comment) {
   // ... your implementation here ...
   const article = document.createElement('article');
-  article.innerHTML = `
-    <p>${comment.text}</p>
-    <footer>Posted by: ${comment.author}</footer>
-  `;
+  const p = document.createElement('p');
+  p.textContent = comment.text;      // Safe - escapes HTML
+  const footer = document.createElement('footer');
+  footer.textContent = `Posted by: ${comment.author}`;
+  article.appendChild(p);
+  article.appendChild(footer);
   return article;
 }
+
 
 /**
  * TODO: Implement the renderComments function.
