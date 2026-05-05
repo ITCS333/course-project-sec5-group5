@@ -45,12 +45,12 @@ let currentReplies = [];
 // TODO: Select each element by its id:
 //   topicSubject, opMessage, opFooter,
 //   replyListContainer, replyForm, newReplyText.
-let topicSubject = document.getElementById("topic-subject");
-let opMessage = document.getElementById("op-message");
-let opFooter = document.getElementById("op-footer");
-let replyListContainer = document.getElementById("reply-list-container");
-let replyForm = document.getElementById("reply-form");
-let newReplyText = document.getElementById("new-reply");
+const topicSubject = document.getElementById('topic-subject');
+const opMessage = document.getElementById('op-message');
+const opFooter = document.getElementById('op-footer');
+const replyListContainer = document.getElementById('reply-list-container');
+const replyForm = document.getElementById('reply-form');
+const newReplyText = document.getElementById('new-reply');
 
 // --- Functions ---
 
@@ -65,8 +65,8 @@ let newReplyText = document.getElementById("new-reply");
  */
 function getTopicIdFromURL() {
   // ... your implementation here ...
-  let params = new URLSearchParams(window.location.search);
-  return params.get("id");
+  const params = new URLSearchParams(window.location.search);
+  return params.get('id');
 }
 
 /**
@@ -110,16 +110,15 @@ function renderOriginalPost(topic) {
  */
 function createReplyArticle(reply) {
   // ... your implementation here ...
-  let article = document.createElement("article");
-  <article>
-
-    <p>{reply.text}</p>
-    <footer>Posted by: {reply.author} on {reply.created_at}</footer>
-    <div>
-        <button class="delete-reply-btn" data-id="{id}">Delete</button>
-    </div>
-  </article>
-  return article;
+  const article = document.createElement('article');
+    article.innerHTML = `
+        <p>${reply.text}</p>
+        <footer>Posted by: ${reply.author} on ${reply.created_at}</footer>
+        <div>
+            <button class="delete-reply-btn" data-id="${reply.id}">Delete</button>
+        </div>
+    `;
+    return article;
 }
 
 /**
@@ -133,12 +132,11 @@ function createReplyArticle(reply) {
  */
 function renderReplies() {
   // ... your implementation here ...
-   replyListContainer.innerHTML = "";
-
-  currentReplies.forEach(reply => {
-    const article = createReplyArticle(reply);
-    replyListContainer.appendChild(article);
-  });
+  replyListContainer.innerHTML = "";
+    currentReplies.forEach(reply => {
+        const replyArticle = createReplyArticle(reply);
+        replyListContainer.appendChild(replyArticle);
+    });
 }
 
 /**
@@ -164,28 +162,30 @@ function renderReplies() {
 async function handleAddReply(event) {
   // ... your implementation here ...
   event.preventDefault();
+  const replyText = newReplyText.value.trim();
 
-  let text = newReplyText.value.trim();
-  if (!text) return;
+  if (!replyText) return;
 
-  let response = await fetch("./api/index.php?action=reply", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+  try {
+    const response = await fetch('./api/index.php?action=reply', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      topic_id: Number(currentTopicId),
-      author: "Student",
-      text: text
-    })
-  });
+    topic_id: parseInt(currentTopicId),
+    author: "Student", // Hardcoded per instructions
+    text: replyText }) });
 
-  let result = await response.json();
-
-  if (result.success) {
-    currentReplies.push(result.data);
-    renderReplies();
-    newReplyText.value = "";
+    const result = await response.json();
+    if (result.success) {
+      const refreshResponse = await fetch(`./api/index.php?action=replies&topic_id=${currentTopicId}`);
+      const refreshData = await refreshResponse.json();
+      currentReplies = refreshData.data;
+            
+      renderReplies();
+      newReplyText.value = "";
+    }
+  } catch (error) {
+    console.error("Error adding reply:", error);
   }
 }
 
@@ -202,22 +202,25 @@ async function handleAddReply(event) {
  */
 async function handleReplyListClick(event) {
   // ... your implementation here ...
-  let target = event.target;
+  if (event.target.classList.contains('delete-reply-btn')) {
+        const replyId = event.target.dataset.id;
 
-  if (target.classList.contains("delete-reply-btn")) {
-    let id = target.dataset.id;
+        try {
+            const response = await fetch(`./api/index.php?action=delete_reply&id=${replyId}`, {
+                method: 'DELETE'
+            });
 
-    let response = await fetch(`./api/index.php?action=delete_reply&id=${id}`, {
-      method: "DELETE"
-    });
+            const result = await response.json();
 
-    let result = await response.json();
-
-    if (result.success) {
-      currentReplies = currentReplies.filter(r => r.id != id);
-      renderReplies();
+            if (result.success) {
+                // Remove from local state and re-render
+                currentReplies = currentReplies.filter(r => r.id != replyId);
+                renderReplies();
+            }
+        } catch (error) {
+            console.error("Error deleting reply:", error);
+        }
     }
-  }
 }
 
 /**
@@ -250,38 +253,36 @@ async function initializePage() {
   // ... your implementation here ...
   currentTopicId = getTopicIdFromURL();
 
-  if (!currentTopicId) {
-    topicSubject.textContent = "Topic not found.";
-    return;
-  }
-
-  try {
-    let [topicRes, repliesRes] = await Promise.all([
-      fetch(`./api/index.php?id=${currentTopicId}`),
-      fetch(`./api/index.php?action=replies&topic_id=${currentTopicId}`)
-    ]);
-
-    let topicResult = await topicRes.json();
-    let repliesResult = await repliesRes.json();
-
-    if (!topicResult.success || !topicResult.data) {
-      topicSubject.textContent = "Topic not found.";
-      return;
+    if (!currentTopicId) {
+        topicSubject.textContent = "Topic not found.";
+        return;
     }
 
-    let topic = topicResult.data;
-    currentReplies = repliesResult.success ? repliesResult.data : [];
+    try {
+        // Fetch topic and replies in parallel
+        const [topicRes, repliesRes] = await Promise.all([
+            fetch(`./api/index.php?id=${currentTopicId}`),
+            fetch(`./api/index.php?action=replies&topic_id=${currentTopicId}`)
+        ]);
 
-    renderOriginalPost(topic);
-    renderReplies();
+        const topicJson = await topicRes.json();
+        const repliesJson = await repliesRes.json();
 
-    replyForm.addEventListener("submit", handleAddReply);
-    replyListContainer.addEventListener("click", handleReplyListClick);
+        if (topicJson.success) {
+            currentReplies = repliesJson.data || [];
+            renderOriginalPost(topicJson.data);
+            renderReplies();
 
-  } catch (error) {
-    console.error(error);
-    topicSubject.textContent = "Error loading topic.";
-  }
+            // Attach listeners
+            replyForm.addEventListener('submit', handleAddReply);
+            replyListContainer.addEventListener('click', handleReplyListClick);
+        } else {
+            topicSubject.textContent = "Topic not found.";
+        }
+    } catch (error) {
+        console.error("Initialization error:", error);
+        topicSubject.textContent = "Error loading topic.";
+    }
 }
 
 // --- Initial Page Load ---
