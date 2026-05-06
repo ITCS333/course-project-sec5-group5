@@ -87,12 +87,12 @@ function createResourceRow(resource) {
  */
 function renderTable() {
     // ... your implementation here ...
-    const tbody = document.querySelector('#resources-tbody');
+    const currentTableBody = document.querySelector('#resources-tbody');
     
-    tbody.innerHTML = '';
+    currentTableBody.innerHTML = '';
     resources.forEach(resource => {
         const row = createResourceRow(resource);
-        tbody.appendChild(row);
+        currentTableBody.appendChild(row);
     });
 }
 
