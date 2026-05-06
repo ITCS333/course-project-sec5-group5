@@ -20,9 +20,8 @@ let editId = null;
 
 // --- Element Selections ---
 // TODO: Select the resource form ('#resource-form').
-const form = document.querySelector('#resource-form');
 // TODO: Select the resources table body ('#resources-tbody').
-const tableBody = document.querySelector('#resources-tbody');
+const form = document.querySelector('#resource-form');
 const submitBtn = document.querySelector('#add-resource');
 // --- Functions ---
 
@@ -87,12 +86,15 @@ function createResourceRow(resource) {
  */
 function renderTable() {
     // ... your implementation here ...
-    const currentTableBody = document.querySelector('#resources-tbody');
+  const tbody = document.querySelector('#resources-tbody');
     
-    currentTableBody.innerHTML = '';
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
     resources.forEach(resource => {
         const row = createResourceRow(resource);
-        currentTableBody.appendChild(row);
+        tbody.appendChild(row);
     });
 }
 
@@ -246,17 +248,22 @@ async function handleTableClick(event) {
  *    calling `handleTableClick`.
  */
 async function loadAndInitialize() {
-    try {
+   try {
         const res = await fetch('./api/index.php');
         const data = await res.json();
 
-        
-        resources = data.data || [];
-        
-        renderTable();
+        if (data.success && data.data) {
+            resources = data.data;
+            renderTable();
+        }
 
         form.addEventListener('submit', handleAddResource);
-        tableBody.addEventListener('click', handleTableClick);
+        
+        const tbody = document.querySelector('#resources-tbody');
+        if (tbody) {
+            tbody.addEventListener('click', handleTableClick);
+        }
+        
     } catch (error) {
         console.error("Initialization failed:", error);
     }
