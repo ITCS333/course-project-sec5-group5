@@ -88,10 +88,10 @@ function renderTable() {
     // ... your implementation here ...
   const tbody = document.querySelector('#resources-tbody');
     
-    if (!tbody) return;
 
     tbody.innerHTML = '';
 
+   
     resources.forEach(resource => {
         const row = createResourceRow(resource);
         tbody.appendChild(row);
@@ -248,17 +248,20 @@ async function handleTableClick(event) {
  *    calling `handleTableClick`.
  */
 async function loadAndInitialize() {
-   try {
+ try {
         const res = await fetch('./api/index.php');
         const data = await res.json();
 
-        if (data.success && data.data) {
+        if (data.success) {
             resources = data.data;
             renderTable();
         }
 
-        form.addEventListener('submit', handleAddResource);
-        
+        const resourceForm = document.querySelector('#resource-form');
+        if (resourceForm) {
+            resourceForm.addEventListener('submit', handleAddResource);
+        }
+
         const tbody = document.querySelector('#resources-tbody');
         if (tbody) {
             tbody.addEventListener('click', handleTableClick);
