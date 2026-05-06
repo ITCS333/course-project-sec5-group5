@@ -89,10 +89,10 @@ function renderTable() {
     // ... your implementation here ...
   tableBody.innerHTML = '';
 
-    resources.forEach(resources => {
-        const row = createResourceRow(resources);
-        tableBody.appendChild(row);
-    });
+   resources.forEach(resource => {
+    const row = createResourceRow(resource);
+    tableBody.appendChild(row);
+});
 }
 
 /**
@@ -199,10 +199,9 @@ async function handleAddResource(event) {
  */
 async function handleTableClick(event) {
     // ... your implementation here ...
-     const id = event.target.dataset.id;
+    const id = event.target.dataset.id;
 
-    // DELETE
-    if (event.target.classList.contains('delete-btn')) {
+     if (event.target.classList.contains('delete-btn')) {
         const res = await fetch(`./api/index.php?id=${id}`, {
             method: 'DELETE'
         });
@@ -213,7 +212,8 @@ async function handleTableClick(event) {
             resources = resources.filter(r => r.id != id);
             renderTable();
         }
-          if (event.target.classList.contains('edit-btn')) {
+    }
+   if (event.target.classList.contains('edit-btn')) {
         const resource = resources.find(r => r.id == id);
         if (!resource) return;
 
@@ -224,9 +224,11 @@ async function handleTableClick(event) {
         editMode = true;
         editId = id;
 
-        document.querySelector('#add-resource').textContent = 'Update Resource';
+        submitBtn.textContent = 'Update Resource';
     }
-}}
+  
+  
+}
 
 /**
  * TODO: Implement the loadAndInitialize function.
