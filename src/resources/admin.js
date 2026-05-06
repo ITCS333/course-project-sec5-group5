@@ -23,6 +23,7 @@ let editId = null;
 // TODO: Select the resources table body ('#resources-tbody').
 const form = document.querySelector('#resource-form');
 const submitBtn = document.querySelector('#add-resource');
+const tableBody = document.querySelector('#resources-tbody');
 // --- Functions ---
 
 /**
@@ -86,12 +87,11 @@ function createResourceRow(resource) {
  */
 function renderTable() {
     // ... your implementation here ...
-  const tbody = document.querySelector('#resources-tbody');
+  const tbody = document.querySelector('#resources-tbody') || tableBody;
     
+    if (!tbody) return;
 
     tbody.innerHTML = '';
-
-   
     resources.forEach(resource => {
         const row = createResourceRow(resource);
         tbody.appendChild(row);
@@ -248,20 +248,20 @@ async function handleTableClick(event) {
  *    calling `handleTableClick`.
  */
 async function loadAndInitialize() {
- try {
+    try {
         const res = await fetch('./api/index.php');
         const data = await res.json();
 
-        if (data.success) {
+        if (data.success && data.data) {
             resources = data.data;
             renderTable();
         }
 
-        const resourceForm = document.querySelector('#resource-form');
-        if (resourceForm) {
-            resourceForm.addEventListener('submit', handleAddResource);
+        if (form) {
+            form.addEventListener('submit', handleAddResource);
         }
 
+        // Fresh selection for the listener
         const tbody = document.querySelector('#resources-tbody');
         if (tbody) {
             tbody.addEventListener('click', handleTableClick);
