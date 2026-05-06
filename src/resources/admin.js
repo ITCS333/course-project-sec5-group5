@@ -14,7 +14,7 @@
 // --- Global Data Store ---
 var resources = window.resources || [];
 let editMode = false;
-let editId = null;
+let editId = null; 
 
 const form = document.querySelector('#resource-form');
 const submitBtn = document.querySelector('#add-resource');
@@ -30,42 +30,41 @@ const submitBtn = document.querySelector('#add-resource');
  *    - A "Delete" button with class="delete-btn" and data-id="${id}".
  */
 function createResourceRow(resource) {
-     const tr = document.createElement('tr');
+    const tr = document.createElement('tr');
 
-     const tdTitle = document.createElement('td');
+    const tdTitle = document.createElement('td');
     tdTitle.textContent = resource.title;
     tr.appendChild(tdTitle);
 
-     const tdDescription = document.createElement('td');
+    const tdDescription = document.createElement('td');
     tdDescription.textContent = resource.description;
     tr.appendChild(tdDescription);
 
-     const tdLink = document.createElement('td');
+    const tdLink = document.createElement('td');
     const a = document.createElement('a');
     a.href = resource.link;
     a.textContent = resource.link;
-    a.target = '_blank'; // Opens link in a new tab
+    a.target = '_blank';
     tdLink.appendChild(a);
     tr.appendChild(tdLink);
 
-     const tdActions = document.createElement('td');
+    const tdActions = document.createElement('td');
 
-     const editBtn = document.createElement('button');
+    const editBtn = document.createElement('button');
     editBtn.textContent = 'Edit';
     editBtn.classList.add('edit-btn');
-    editBtn.dataset.id = resource.id; // Sets data-id="${id}"
+    editBtn.dataset.id = resource.id;
 
-     const deleteBtn = document.createElement('button');
+    const deleteBtn = document.createElement('button');
     deleteBtn.textContent = 'Delete';
     deleteBtn.classList.add('delete-btn');
-    deleteBtn.dataset.id = resource.id; // Sets data-id="${id}"
+    deleteBtn.dataset.id = resource.id;
 
-     tdActions.appendChild(editBtn);
+    tdActions.appendChild(editBtn);
     tdActions.appendChild(deleteBtn);
-    
-     tr.appendChild(tdActions);
+    tr.appendChild(tdActions);
 
-     return tr;
+    return tr;
 }
 
 /**
@@ -77,17 +76,17 @@ function createResourceRow(resource) {
  *    append the returned <tr> to the table body.
  */
 function renderTable() {
-  
+    // 1. Always re-select the tbody to ensure we have the live DOM element
     const tbody = document.getElementById('resources-tbody');
-    
-     if (!tbody) return;
+    if (!tbody) return;
 
-     tbody.innerHTML = '';
+    // 2. Clear the table body
+    tbody.innerHTML = '';
 
-     
+    // 3. Sync with window.resources in case the test suite modified it directly
     const dataToRender = window.resources || resources;
 
-   
+    // 4. Loop through and append rows
     dataToRender.forEach(resource => {
         const row = createResourceRow(resource);
         tbody.appendChild(row);
