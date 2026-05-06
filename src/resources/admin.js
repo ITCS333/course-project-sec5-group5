@@ -13,7 +13,6 @@
 
 // --- Global Data Store ---
 var resources = window.resources || [];
-var resources = [];
 let editMode = false;
 let editId = null;
 
