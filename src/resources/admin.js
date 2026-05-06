@@ -50,7 +50,7 @@ function createResourceRow(resource) {
     const tdLink = document.createElement('td');
     const a = document.createElement('a');
     a.href = resource.link;
-    a.textContent = 'View';
+    a.textContent = resource.link;
     a.target = '_blank';
     tdLink.appendChild(a);
 
@@ -89,8 +89,8 @@ function renderTable() {
     // ... your implementation here ...
   tableBody.innerHTML = '';
 
-    resources.forEach(resource => {
-        const row = createResourceRow(resource);
+    resources.forEach(resources => {
+        const row = createResourceRow(resources);
         tableBody.appendChild(row);
     });
 }
