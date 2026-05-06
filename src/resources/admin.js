@@ -12,7 +12,6 @@
 */
 
 // --- Global Data Store ---
-// This will hold the resources loaded from the API.
 let resources = [];
 let editMode = false;
 let editId = null;
@@ -44,17 +43,19 @@ function createResourceRow(resource) {
     const a = document.createElement('a');
     a.href = resource.link;
     a.textContent = resource.link;
+    a.target = '_blank';
     tdLink.appendChild(a);
 
     const tdActions = document.createElement('td');
+
     const editBtn = document.createElement('button');
     editBtn.textContent = 'Edit';
-    editBtn.className = 'edit-btn';
+    editBtn.classList.add('edit-btn');
     editBtn.dataset.id = resource.id;
 
     const deleteBtn = document.createElement('button');
     deleteBtn.textContent = 'Delete';
-    deleteBtn.className = 'delete-btn';
+    deleteBtn.classList.add('delete-btn');
     deleteBtn.dataset.id = resource.id;
 
     tdActions.appendChild(editBtn);
@@ -77,11 +78,13 @@ function createResourceRow(resource) {
  *    append the returned <tr> to the table body.
  */
 function renderTable() {
-    const tbody = document.querySelector('#resources-tbody');
-    tbody.innerHTML = '';
+    const currentTbody = document.querySelector('#resources-tbody');
+    
+    currentTbody.innerHTML = '';
+
     resources.forEach(resource => {
         const row = createResourceRow(resource);
-        tbody.appendChild(row);
+        currentTbody.appendChild(row);
     });
 }
 
@@ -119,9 +122,10 @@ async function handleAddResource(event) {
         });
         const result = await response.json();
         if (result.success) {
-            const index = resources.findIndex(r => r.id == editId);
+             const index = resources.findIndex(r => r.id == editId);
             resources[index] = { id: editId, title, description, link };
-            editMode = false;
+            
+             editMode = false;
             editId = null;
             document.querySelector('#add-resource').textContent = 'Add Resource';
         }
@@ -188,16 +192,17 @@ async function handleTableClick(event) {
 
     if (event.target.classList.contains('edit-btn')) {
         const resource = resources.find(r => r.id == id);
-        document.querySelector('#resource-title').value = resource.title;
-        document.querySelector('#resource-description').value = resource.description;
-        document.querySelector('#resource-link').value = resource.link;
+        if (resource) {
+            document.querySelector('#resource-title').value = resource.title;
+            document.querySelector('#resource-description').value = resource.description;
+            document.querySelector('#resource-link').value = resource.link;
 
-        editMode = true;
-        editId = id;
-        document.querySelector('#add-resource').textContent = 'Update Resource';
+            editMode = true;
+            editId = id;
+            document.querySelector('#add-resource').textContent = 'Update Resource';
+        }
     }
 }
-
 /**
  * TODO: Implement the loadAndInitialize function.
  * This function must be 'async'.
@@ -213,16 +218,26 @@ async function handleTableClick(event) {
  *    calling `handleTableClick`.
  */
 async function loadAndInitialize() {
-    const response = await fetch('./api/index.php');
-    const result = await response.json();
+    try {
+        const response = await fetch('./api/index.php');
+        const result = await response.json();
 
-    if (result.success) {
-        resources = result.data;
-        renderTable();
+        if (result.success) {
+            resources = result.data || [];
+            renderTable();
+        }
+
+        if (form) {
+            form.addEventListener('submit', handleAddResource);
+        }
+        
+        const tbody = document.querySelector('#resources-tbody');
+        if (tbody) {
+            tbody.addEventListener('click', handleTableClick);
+        }
+    } catch (error) {
+        console.error("Failed to initialize:", error);
     }
-
-    form.addEventListener('submit', handleAddResource);
-    document.querySelector('#resources-tbody').addEventListener('click', handleTableClick);
 }
 
 // --- Initial Page Load ---
