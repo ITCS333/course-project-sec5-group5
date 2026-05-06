@@ -55,10 +55,13 @@ function createResourceRow(resource) {
 }
 
 function renderTable() {
-    tbody.innerHTML = '';
+    while (tableBody.firstChild) {
+        tableBody.removeChild(tableBody.firstChild);
+    }
+
     resources.forEach(resource => {
         const row = createResourceRow(resource);
-        tbody.appendChild(row);
+        tableBody.appendChild(row);
     });
 }
 
