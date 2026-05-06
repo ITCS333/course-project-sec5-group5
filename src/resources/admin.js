@@ -20,7 +20,7 @@ let editId = null;
 
 // --- Element Selections ---
 // TODO: Select the resource form ('#resource-form').
-const resourceForm = document.querySelector('#resource-form');
+const form = document.querySelector('#resource-form');
 // TODO: Select the resources table body ('#resources-tbody').
 const tableBody = document.querySelector('#resources-tbody');
 const submitBtn = document.querySelector('#add-resource');
