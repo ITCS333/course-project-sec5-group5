@@ -12,12 +12,12 @@
 */
 
 // --- Global Data Store ---
-let resources = [];
+var resources = [];
 let editMode = false;
 let editId = null;
 
 const form = document.querySelector('#resource-form');
-const tableBody = document.querySelector('#resources-tbody');
+const submitBtn = document.querySelector('#add-resource');
 
 /**
  * TODO: Implement the createResourceRow function.
@@ -78,13 +78,17 @@ function createResourceRow(resource) {
  *    append the returned <tr> to the table body.
  */
 function renderTable() {
-    const currentTbody = document.querySelector('#resources-tbody');
-    
-    currentTbody.innerHTML = '';
+     const tbody = document.querySelector('#resources-tbody');
+    if (!tbody) return;
 
-    resources.forEach(resource => {
+     tbody.innerHTML = '';
+
+    
+    const dataToRender = window.resources || resources;
+    
+    dataToRender.forEach(resource => {
         const row = createResourceRow(resource);
-        currentTbody.appendChild(row);
+        tbody.appendChild(row);
     });
 }
 
