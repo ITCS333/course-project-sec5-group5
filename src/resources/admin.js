@@ -75,15 +75,18 @@ function createResourceRow(resource) {
  *    append the returned <tr> to the table body.
  */
 function renderTable() {
+  
     const tbody = document.getElementById('resources-tbody');
     
      if (!tbody) return;
 
      tbody.innerHTML = '';
 
-     const data = window.resources || resources;
+     
+    const dataToRender = window.resources || resources;
 
-     data.forEach(resource => {
+   
+    dataToRender.forEach(resource => {
         const row = createResourceRow(resource);
         tbody.appendChild(row);
     });
