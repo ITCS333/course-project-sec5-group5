@@ -36,8 +36,7 @@ const submitBtn = document.querySelector('#add-resource');
  *    - A "Delete" button with class="delete-btn" and data-id="${id}".
  */
 function createResourceRow(resource) {
-    // ... your implementation here ...
-       const tr = document.createElement("tr");
+    const tr = document.createElement("tr");
 
     tr.innerHTML = `
         <td>${resource.title}</td>
@@ -50,7 +49,6 @@ function createResourceRow(resource) {
     `;
 
     return tr;
-
 }
 
 /**
@@ -62,7 +60,6 @@ function createResourceRow(resource) {
  *    append the returned <tr> to the table body.
  */
 function renderTable() {
-    // ... your implementation here ...
     tbody.innerHTML = "";
 
     resources.forEach(resource => {
@@ -90,56 +87,62 @@ function renderTable() {
  * 6. Reset the form.
  */
 async function handleAddResource(event) {
-// ... your implementation here ...
-  event.preventDefault();
-try{
+    event.preventDefault();
+
     const title = document.querySelector('#resource-title').value;
     const description = document.querySelector('#resource-description').value;
     const link = document.querySelector('#resource-link').value;
-if (editId) {
-        const response = await fetch('./api/index.php', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: editId, title, description, link })
-        });
 
-        const result = await response.json();
-
-        if (result.success) {
-            resources = resources.map(res =>
-                res.id == editId ? { id: editId, title, description, link } : res
-            );
-
-            editId = null;
-            submitBtn.textContent = "Add Resource";
-        }
-
-    } else {
-          const response = await fetch('./api/index.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, description, link })
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            resources.push({
-                id: result.id,
-                title,
-                description,
-                link
+    try {
+        if (editId) {
+            const response = await fetch('./api/index.php', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: editId, title, description, link })
             });
+
+            if (!response.ok) throw new Error('HTTP error ' + response.status);
+            const result = await response.json();
+
+            if (result.success) {
+                resources = resources.map(res =>
+                    res.id == editId ? { id: editId, title, description, link } : res
+                );
+                editId = null;
+                submitBtn.textContent = "Add Resource";
+            } else {
+                throw new Error(result.message || 'Update failed');
+            }
+        } else {
+            const response = await fetch('./api/index.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, description, link })
+            });
+
+            if (!response.ok) throw new Error('HTTP error ' + response.status);
+            const result = await response.json();
+
+            if (result.success) {
+                resources.push({
+                    id: result.id,
+                    title,
+                    description,
+                    link
+                });
+            } else {
+                throw new Error(result.message || 'Create failed');
+            }
         }
+
+        renderTable();
+        resourceForm.reset();
+    } catch (error) {
+        console.error('Error saving resource:', error);
+        alert('Failed to save resource. Check console for details.');
     }
-
-    renderTable();
-    resourceForm.reset();}
-  catch(error){
-  console.error('error adding resource:',error)
-  }
-
 }
+
 /**
  * TODO: Implement the handleTableClick function.
  * This handles click events on the table body using event delegation.
@@ -172,34 +175,37 @@ if (editId) {
  *    restoring the submit button text to "Add Resource".
  */
 async function handleTableClick(event) {
-    // ... your implementation here ...
-   const target = event.target;
+    const target = event.target;
     const id = target.dataset.id;
+
     if (target.classList.contains('delete-btn')) {
-        const response = await fetch(`./api/index.php?id=${id}`, {
-            method: 'DELETE'
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            resources = resources.filter(res => res.id != id);
-            renderTable();
+        if (!confirm('Are you sure you want to delete this resource?')) return;
+        try {
+            const response = await fetch(`./api/index.php?id=${id}`, {
+                method: 'DELETE'
+            });
+            if (!response.ok) throw new Error('HTTP error ' + response.status);
+            const result = await response.json();
+            if (result.success) {
+                resources = resources.filter(res => res.id != id);
+                renderTable();
+            } else {
+                throw new Error(result.message || 'Delete failed');
+            }
+        } catch (error) {
+            console.error('Error deleting resource:', error);
+            alert('Failed to delete resource.');
         }
-    }
-      if (target.classList.contains('edit-btn')) {
+    } else if (target.classList.contains('edit-btn')) {
         const resource = resources.find(r => r.id == id);
-
         if (resource) {
             document.querySelector('#resource-title').value = resource.title;
             document.querySelector('#resource-description').value = resource.description;
             document.querySelector('#resource-link').value = resource.link;
-
             editId = id;
             submitBtn.textContent = "Update Resource";
         }
     }
-
 }
 
 /**
@@ -217,21 +223,25 @@ async function handleTableClick(event) {
  *    calling `handleTableClick`.
  */
 async function loadAndInitialize() {
-    // ... your implementation here ...
-    const response = await fetch('./api/index.php');
-    const result = await response.json();
+    try {
+        const response = await fetch('./api/index.php');
+        if (!response.ok) throw new Error('HTTP error ' + response.status);
+        const result = await response.json();
 
-    if (result.success) {
-        resources = result.data;
-        renderTable();
+        if (result.success) {
+            resources = result.data;
+            renderTable();
+        } else {
+            throw new Error(result.message || 'Failed to load resources');
+        }
+    } catch (error) {
+        console.error('Error loading resources:', error);
+        alert('Failed to load resources. Check if API is accessible.');
     }
 
     resourceForm.addEventListener('submit', handleAddResource);
     tbody.addEventListener('click', handleTableClick);
 }
-
-
-
 
 // --- Initial Page Load ---
 // Call the main async function to start the application.
