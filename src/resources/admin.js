@@ -13,6 +13,7 @@
 
 // --- Global Data Store ---
 var resources = window.resources || [];
+var resources = [];
 let editMode = false;
 let editId = null;
 
@@ -30,40 +31,42 @@ const submitBtn = document.querySelector('#add-resource');
  *    - A "Delete" button with class="delete-btn" and data-id="${id}".
  */
 function createResourceRow(resource) {
-    const tr = document.createElement('tr');
+     const tr = document.createElement('tr');
 
-    const tdTitle = document.createElement('td');
+     const tdTitle = document.createElement('td');
     tdTitle.textContent = resource.title;
+    tr.appendChild(tdTitle);
 
-    const tdDesc = document.createElement('td');
-    tdDesc.textContent = resource.description;
+     const tdDescription = document.createElement('td');
+    tdDescription.textContent = resource.description;
+    tr.appendChild(tdDescription);
 
-    const tdLink = document.createElement('td');
+     const tdLink = document.createElement('td');
     const a = document.createElement('a');
     a.href = resource.link;
     a.textContent = resource.link;
+    a.target = '_blank'; // Opens link in a new tab
     tdLink.appendChild(a);
-
-    const tdActions = document.createElement('td');
-    const editBtn = document.createElement('button');
-    editBtn.textContent = 'Edit';
-    editBtn.className = 'edit-btn';
-    editBtn.dataset.id = resource.id;
-
-    const deleteBtn = document.createElement('button');
-    deleteBtn.textContent = 'Delete';
-    deleteBtn.className = 'delete-btn';
-    deleteBtn.dataset.id = resource.id;
-
-    tdActions.appendChild(editBtn);
-    tdActions.appendChild(deleteBtn);
-
-    tr.appendChild(tdTitle);
-    tr.appendChild(tdDesc);
     tr.appendChild(tdLink);
-    tr.appendChild(tdActions);
 
-    return tr;
+     const tdActions = document.createElement('td');
+
+     const editBtn = document.createElement('button');
+    editBtn.textContent = 'Edit';
+    editBtn.classList.add('edit-btn');
+    editBtn.dataset.id = resource.id; // Sets data-id="${id}"
+
+     const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.classList.add('delete-btn');
+    deleteBtn.dataset.id = resource.id; // Sets data-id="${id}"
+
+     tdActions.appendChild(editBtn);
+    tdActions.appendChild(deleteBtn);
+    
+     tr.appendChild(tdActions);
+
+     return tr;
 }
 
 /**
