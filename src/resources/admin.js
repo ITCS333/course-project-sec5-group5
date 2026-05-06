@@ -81,10 +81,9 @@ function renderTable() {
      const tbody = document.querySelector('#resources-tbody');
     if (!tbody) return;
 
-    // 2. Clear the table body
-    tbody.innerHTML = '';
+     tbody.innerHTML = '';
 
-   
+    
     const currentData = window.resources || resources;
 
      currentData.forEach(resource => {
