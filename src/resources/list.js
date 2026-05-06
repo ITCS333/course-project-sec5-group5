@@ -14,6 +14,7 @@
 // --- Element Selections ---
 // TODO: Select the section for the resource list ('#resource-list-section').
 const resourceListSection = document.querySelector('#resource-list-section');
+
 // --- Functions ---
 
 /**
@@ -24,15 +25,23 @@ const resourceListSection = document.querySelector('#resource-list-section');
  * `details.html?id=${id}` so the detail page knows which resource to load.
  */
 function createResourceArticle(resource) {
-  const article = document.createElement('article');
+    const article = document.createElement('article');
 
-  article.innerHTML = `
-    <h3>${resource.title}</h3>
-    <p>${resource.description}</p>
-    <a href="details.html?id=${resource.id}">View Resource & Discussion</a>
-  `;
+    const heading = document.createElement('h3');
+    heading.textContent = resource.title;
 
-  return article;
+    const descriptionPara = document.createElement('p');
+    descriptionPara.textContent = resource.description;
+
+    const link = document.createElement('a');
+    link.href = `details.html?id=${resource.id}`;
+    link.textContent = 'View Resource & Discussion';
+
+    article.appendChild(heading);
+    article.appendChild(descriptionPara);
+    article.appendChild(link);
+
+    return article;
 }
 
 /**
@@ -48,19 +57,24 @@ function createResourceArticle(resource) {
  *    - Append the returned <article> element to the list section.
  */
 async function loadResources() {
-  try {
-    const response = await fetch('./api/index.php');
-    const result = await response.json();
-    if (result.success) {
-        resourceListSection.innerHTML = '';
-        result.data.forEach(resource => {
-            const resourceArticle = createResourceArticle(resource);
-            resourceListSection.appendChild(resourceArticle);
-      });
+    try {
+        const response = await fetch('./api/index.php');
+        if (!response.ok) throw new Error('HTTP error ' + response.status);
+        const result = await response.json();
+
+        if (result.success) {
+            resourceListSection.innerHTML = '';
+            result.data.forEach(resource => {
+                const resourceArticle = createResourceArticle(resource);
+                resourceListSection.appendChild(resourceArticle);
+            });
+        } else {
+            throw new Error(result.message || 'Failed to load resources');
+        }
+    } catch (error) {
+        console.error("Error loading resources:", error);
+        resourceListSection.innerHTML = '<p>Failed to load resources. Please try again later.</p>';
     }
-  } catch (error) {
-    console.error("Error loading resources:", error);
-  }
 }
 
 // --- Initial Page Load ---
