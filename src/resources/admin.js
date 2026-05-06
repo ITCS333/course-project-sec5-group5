@@ -249,8 +249,9 @@ async function loadAndInitialize() {
       const res = await fetch('./api/index.php');
     const data = await res.json();
 
+if (!resources.length) {
     resources = data.data || [];
-
+}
     renderTable();
 
     form.addEventListener('submit', handleAddResource);
