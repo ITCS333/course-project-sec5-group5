@@ -12,13 +12,12 @@
 */
 
 // --- Global Data Store ---
-let resources = [];
+var resources = window.resources || [];
 let editMode = false;
 let editId = null;
 
 const form = document.querySelector('#resource-form');
-const tableBody = document.querySelector('#resources-tbody');
-
+const submitBtn = document.querySelector('#add-resource');
 /**
  * TODO: Implement the createResourceRow function.
  * It takes one resource object { id, title, description, link }.
@@ -76,9 +75,15 @@ function createResourceRow(resource) {
  *    append the returned <tr> to the table body.
  */
 function renderTable() {
-    const tbody = document.querySelector('#resources-tbody');
-    tbody.innerHTML = '';
-    resources.forEach(resource => {
+    const tbody = document.getElementById('resources-tbody');
+    
+     if (!tbody) return;
+
+     tbody.innerHTML = '';
+
+     const data = window.resources || resources;
+
+     data.forEach(resource => {
         const row = createResourceRow(resource);
         tbody.appendChild(row);
     });
