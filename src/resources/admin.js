@@ -10,8 +10,7 @@ let editId = null;
 const form = document.querySelector('#resource-form');
 
 // TODO: Select the resources table body ('#resources-tbody').
-const tbody = document.querySelector('#resources-tbody');
-
+const tableBody = document.querySelector('#resources-tbody');
 
 // --- Functions ---
 
