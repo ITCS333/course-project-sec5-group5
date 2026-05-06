@@ -16,7 +16,6 @@
   3. Implement the TODOs below.
 */
 
-
 // --- Global Data Store ---
 // These will hold the data related to this specific resource.
 let currentResourceId = null;
@@ -30,6 +29,7 @@ const linkEl = document.querySelector('#resource-link');
 const commentList = document.querySelector('#comment-list');
 const commentForm = document.querySelector('#comment-form');
 const newCommentInput = document.querySelector('#new-comment');
+
 // --- Functions ---
 
 /**
@@ -40,8 +40,8 @@ const newCommentInput = document.querySelector('#new-comment');
  * 3. Return the id value (as a string).
  */
 function getResourceIdFromURL() {
-  const params = new URLSearchParams(window.location.search);
-  return params.get('id');
+    const params = new URLSearchParams(window.location.search);
+    return params.get('id');
 }
 
 /**
@@ -56,10 +56,9 @@ function getResourceIdFromURL() {
  *    to the resource's link.
  */
 function renderResourceDetails(resource) {
-  // ... your implementation here ...
-  titleEl.textContent = resource.title;
-  descriptionEl.textContent = resource.description;
-  linkEl.href = resource.link;
+    titleEl.textContent = resource.title;
+    descriptionEl.textContent = resource.description;
+    linkEl.href = resource.link;
 }
 
 /**
@@ -71,17 +70,15 @@ function renderResourceDetails(resource) {
  *   (e.g., "Posted by: Ali Hassan").
  */
 function createCommentArticle(comment) {
-  // ... your implementation here ...
-  const article = document.createElement('article');
-  const p = document.createElement('p');
-  p.textContent = comment.text;      // Safe - escapes HTML
-  const footer = document.createElement('footer');
-  footer.textContent = `Posted by: ${comment.author}`;
-  article.appendChild(p);
-  article.appendChild(footer);
-  return article;
+    const article = document.createElement('article');
+    const p = document.createElement('p');
+    p.textContent = comment.text;
+    const footer = document.createElement('footer');
+    footer.textContent = `Posted by: ${comment.author}`;
+    article.appendChild(p);
+    article.appendChild(footer);
+    return article;
 }
-
 
 /**
  * TODO: Implement the renderComments function.
@@ -92,10 +89,10 @@ function createCommentArticle(comment) {
  *    append the returned <article> to the comment list container.
  */
 function renderComments() {
-  commentList.innerHTML = '';
-  currentComments.forEach(comment => {
-    commentList.appendChild(createCommentArticle(comment));
-  });
+    commentList.innerHTML = '';
+    currentComments.forEach(comment => {
+        commentList.appendChild(createCommentArticle(comment));
+    });
 }
 
 /**
@@ -121,27 +118,46 @@ function renderComments() {
  * 7. Clear the textarea.
  */
 async function handleAddComment(event) {
-event.preventDefault();
-  const text = newCommentInput.value.trim();
-  
-  if (!text) return;
+    event.preventDefault();
+    const text = newCommentInput.value.trim();
 
-  const response = await fetch('./api/index.php?action=comment', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      resource_id: currentResourceId,
-      author: 'Student',
-      text: text
-    })
-  });
+    if (!text) return;
 
-  const result = await response.json();
-  if (result.success) {
-    currentComments.push(result.data);
-    renderComments();
-    newCommentInput.value = '';
-  }
+    try {
+        const response = await fetch('./api/index.php?action=comment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                resource_id: currentResourceId,
+                author: 'Student',
+                text: text
+            })
+        });
+
+        if (!response.ok) throw new Error('HTTP error ' + response.status);
+        const result = await response.json();
+
+        if (result.success) {
+            // The API returns the new comment with its id; we need the full object.
+            // Since the API might return just { success, id } or { success, data },
+            // we'll construct a local comment object.
+            const newComment = {
+                id: result.id,
+                resource_id: currentResourceId,
+                author: 'Student',
+                text: text,
+                created_at: new Date().toISOString()
+            };
+            currentComments.push(newComment);
+            renderComments();
+            newCommentInput.value = '';
+        } else {
+            throw new Error(result.message || 'Failed to post comment');
+        }
+    } catch (error) {
+        console.error('Error posting comment:', error);
+        alert('Failed to post comment. Please try again.');
+    }
 }
 
 /**
@@ -167,29 +183,38 @@ event.preventDefault();
  * 6. If the resource is not found, display an error in the title element.
  */
 async function initializePage() {
-  currentResourceId = getResourceIdFromURL();
+    currentResourceId = getResourceIdFromURL();
 
-  if (!currentResourceId) {
-    titleEl.textContent = "Resource not found.";
-    return;
-  }
+    if (!currentResourceId) {
+        titleEl.textContent = "Resource not found.";
+        return;
+    }
 
-  const [resourceRes, commentsRes] = await Promise.all([
-    fetch(`./api/index.php?id=${currentResourceId}`),
-    fetch(`./api/index.php?resource_id=${currentResourceId}&action=comments`)
-  ]);
+    try {
+        const [resourceRes, commentsRes] = await Promise.all([
+            fetch(`./api/index.php?id=${currentResourceId}`),
+            fetch(`./api/index.php?resource_id=${currentResourceId}&action=comments`)
+        ]);
 
-  const resourceData = await resourceRes.json();
-  const commentsData = await commentsRes.json();
+        if (!resourceRes.ok || !commentsRes.ok) {
+            throw new Error('Failed to fetch data');
+        }
 
-  if (resourceData.success) {
-    renderResourceDetails(resourceData.data);
-    currentComments = commentsData.data || [];
-    renderComments();
-    commentForm.addEventListener('submit', handleAddComment);
-  } else {
-    titleEl.textContent = "Resource not found.";
-  }
+        const resourceData = await resourceRes.json();
+        const commentsData = await commentsRes.json();
+
+        if (resourceData.success) {
+            renderResourceDetails(resourceData.data);
+            currentComments = commentsData.data || [];
+            renderComments();
+            commentForm.addEventListener('submit', handleAddComment);
+        } else {
+            titleEl.textContent = "Resource not found.";
+        }
+    } catch (error) {
+        console.error('Error initializing page:', error);
+        titleEl.textContent = "Error loading resource.";
+    }
 }
 
 // --- Initial Page Load ---
