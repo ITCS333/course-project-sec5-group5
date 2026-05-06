@@ -86,17 +86,20 @@ function createResourceRow(resource) {
  *    append the returned <tr> to the table body.
  */
 function renderTable() {
+  
     // ... your implementation here ...
-  const tbody = document.querySelector('#resources-tbody') || tableBody;
+   
+    const tbody = document.querySelector('#resources-tbody');
     
-    if (!tbody) return;
+     tbody.innerHTML = '';
 
-    tbody.innerHTML = '';
+    
     resources.forEach(resource => {
-        const row = createResourceRow(resource);
+         const row = createResourceRow(resource);
         tbody.appendChild(row);
     });
 }
+
 
 /**
  * TODO: Implement the handleAddResource function.
