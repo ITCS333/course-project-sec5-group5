@@ -245,17 +245,20 @@ async function handleTableClick(event) {
  *    calling `handleTableClick`.
  */
 async function loadAndInitialize() {
-    // ... your implementation here ...
-      const res = await fetch('./api/index.php');
-    const data = await res.json();
+    try {
+        const res = await fetch('./api/index.php');
+        const data = await res.json();
 
-if (!resources.length) {
-    resources = data.data || [];
-}
-    renderTable();
+        
+        resources = data.data || [];
+        
+        renderTable();
 
-    form.addEventListener('submit', handleAddResource);
-    tableBody.addEventListener('click', handleTableClick);
+        form.addEventListener('submit', handleAddResource);
+        tableBody.addEventListener('click', handleTableClick);
+    } catch (error) {
+        console.error("Initialization failed:", error);
+    }
 }
 
 
