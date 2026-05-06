@@ -250,5 +250,8 @@ async function loadAndInitialize() {
 }
 // --- Initial Page Load ---
 // Call the main async function to start the application.
-loadAndInitialize();
-
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadAndInitialize);
+} else {
+    loadAndInitialize();
+}
