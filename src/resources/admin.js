@@ -12,12 +12,11 @@
 */
 
 // --- Global Data Store ---
-var resources = [];
+let resources = [];
 let editMode = false;
 let editId = null;
 
 const form = document.querySelector('#resource-form');
-const submitBtn = document.querySelector('#add-resource');
 const tableBody = document.querySelector('#resources-tbody');
 
 /**
@@ -34,35 +33,33 @@ const tableBody = document.querySelector('#resources-tbody');
 function createResourceRow(resource) {
     const tr = document.createElement('tr');
 
-     const tdTitle = document.createElement('td');
-    tdTitle.textContent = resource.title; [cite: 1714]
+    const tdTitle = document.createElement('td');
+    tdTitle.textContent = resource.title;
 
-     const tdDesc = document.createElement('td');
+    const tdDesc = document.createElement('td');
     tdDesc.textContent = resource.description;
 
-     const tdLink = document.createElement('td');
+    const tdLink = document.createElement('td');
     const a = document.createElement('a');
     a.href = resource.link;
     a.textContent = resource.link;
-    a.target = '_blank';
     tdLink.appendChild(a);
 
-     const tdActions = document.createElement('td');
-
+    const tdActions = document.createElement('td');
     const editBtn = document.createElement('button');
     editBtn.textContent = 'Edit';
-    editBtn.classList.add('edit-btn'); [cite: 1731]
+    editBtn.className = 'edit-btn';
     editBtn.dataset.id = resource.id;
 
     const deleteBtn = document.createElement('button');
     deleteBtn.textContent = 'Delete';
-    deleteBtn.classList.add('delete-btn');
+    deleteBtn.className = 'delete-btn';
     deleteBtn.dataset.id = resource.id;
 
     tdActions.appendChild(editBtn);
     tdActions.appendChild(deleteBtn);
 
-     tr.appendChild(tdTitle);
+    tr.appendChild(tdTitle);
     tr.appendChild(tdDesc);
     tr.appendChild(tdLink);
     tr.appendChild(tdActions);
@@ -79,12 +76,8 @@ function createResourceRow(resource) {
  *    append the returned <tr> to the table body.
  */
 function renderTable() {
-     const tbody = document.getElementById('resources-tbody');
-    if (!tbody) return;
-
-     tbody.innerHTML = '';
-
-     
+    const tbody = document.querySelector('#resources-tbody');
+    tbody.innerHTML = '';
     resources.forEach(resource => {
         const row = createResourceRow(resource);
         tbody.appendChild(row);
@@ -117,40 +110,34 @@ async function handleAddResource(event) {
     const description = document.querySelector('#resource-description').value;
     const link = document.querySelector('#resource-link').value;
 
-    const payload = { title, description, link };
-
-    try {
-        if (editMode) {
-            payload.id = editId;
-            const res = await fetch('./api/index.php', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            const result = await res.json();
-            if (result.success) {
-                 resources = resources.map(r => r.id == editId ? { ...r, ...payload } : r);
-                editMode = false;
-                editId = null;
-                if (submitBtn) submitBtn.textContent = 'Add Resource';
-            }
-        } else {
-            const res = await fetch('./api/index.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            const result = await res.json();
-            if (result.success) {
-                resources.push({ id: result.id, ...payload });
-            }
+    if (editMode) {
+        const response = await fetch('./api/index.php', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: editId, title, description, link })
+        });
+        const result = await response.json();
+        if (result.success) {
+            const index = resources.findIndex(r => r.id == editId);
+            resources[index] = { id: editId, title, description, link };
+            editMode = false;
+            editId = null;
+            document.querySelector('#add-resource').textContent = 'Add Resource';
         }
-        
-        renderTable();
-        if (form) form.reset();
-    } catch (err) {
-        console.error("Error saving resource:", err);
+    } else {
+        const response = await fetch('./api/index.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, description, link })
+        });
+        const result = await response.json();
+        if (result.success) {
+            resources.push({ id: result.id, title, description, link });
+        }
     }
+
+    renderTable();
+    form.reset();
 }
 
 /**
@@ -185,33 +172,31 @@ async function handleAddResource(event) {
  *    restoring the submit button text to "Add Resource".
  */
 async function handleTableClick(event) {
-    const target = event.target;
-    const id = target.dataset.id;
-    if (!id) return;
+    const id = event.target.dataset.id;
 
-     if (target.classList.contains('delete-btn')) {
-        const res = await fetch(`./api/index.php?id=${id}`, { method: 'DELETE' });
-        const result = await res.json();
+    if (event.target.classList.contains('delete-btn')) {
+        const response = await fetch(`./api/index.php?id=${id}`, {
+            method: 'DELETE'
+        });
+        const result = await response.json();
         if (result.success) {
-            // Filter out the deleted item [cite: 2226]
             resources = resources.filter(r => r.id != id);
             renderTable();
         }
     }
 
-     if (target.classList.contains('edit-btn')) {
-        const resource = resources.find(r => r.id == id); [cite: 2224]
-        if (resource) {
-            document.querySelector('#resource-title').value = resource.title;
-            document.querySelector('#resource-description').value = resource.description;
-            document.querySelector('#resource-link').value = resource.link;
-            
-            editMode = true;
-            editId = id;
-            if (submitBtn) submitBtn.textContent = 'Update Resource';
-        }
+    if (event.target.classList.contains('edit-btn')) {
+        const resource = resources.find(r => r.id == id);
+        document.querySelector('#resource-title').value = resource.title;
+        document.querySelector('#resource-description').value = resource.description;
+        document.querySelector('#resource-link').value = resource.link;
+
+        editMode = true;
+        editId = id;
+        document.querySelector('#add-resource').textContent = 'Update Resource';
     }
 }
+
 /**
  * TODO: Implement the loadAndInitialize function.
  * This function must be 'async'.
@@ -227,31 +212,18 @@ async function handleTableClick(event) {
  *    calling `handleTableClick`.
  */
 async function loadAndInitialize() {
-    try {
-        const res = await fetch('./api/index.php');
-        const result = await res.json();
+    const response = await fetch('./api/index.php');
+    const result = await response.json();
 
-        if (result.success) {
-            resources = result.data || [];
-            renderTable();
-        }
-
-         if (form) {
-            form.addEventListener('submit', handleAddResource);
-        }
-
-        const tbody = document.getElementById('resources-tbody');
-        if (tbody) {
-            tbody.addEventListener('click', handleTableClick);
-        }
-    } catch (err) {
-        console.error("Initialization failed:", err);
+    if (result.success) {
+        resources = result.data;
+        renderTable();
     }
+
+    form.addEventListener('submit', handleAddResource);
+    document.querySelector('#resources-tbody').addEventListener('click', handleTableClick);
 }
+
 // --- Initial Page Load ---
 // Call the main async function to start the application.
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', loadAndInitialize);
-} else {
-    loadAndInitialize();
-}
+loadAndInitialize();
