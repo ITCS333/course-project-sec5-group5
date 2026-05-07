@@ -12,10 +12,9 @@
 */
 
 // --- Global Data Store ---
-window.resources = window.resources || [];
-var resources = window.resources;
+globalThis.resources = globalThis.resources || [];
 let editMode = false;
-let editId = null; 
+let editId = null;
 
 const form = document.querySelector('#resource-form');
 const submitBtn = document.querySelector('#add-resource');
@@ -83,9 +82,7 @@ function renderTable() {
 
     tbody.innerHTML = '';
 
-    const data = (Array.isArray(resources) && resources.length)
-        ? resources
-        : window.resources;
+    const data = globalThis.resources || [];
 
     data.forEach(resource => {
         const row = createResourceRow(resource);
@@ -95,22 +92,6 @@ function renderTable() {
 
 /**
  * TODO: Implement the handleAddResource function.
- * This is the event handler for the form's 'submit' event.
- * It should:
- * 1. Prevent the form's default submission.
- * 2. Get the values from the title (id="resource-title"),
- *    description (id="resource-description"), and
- *    link (id="resource-link") inputs.
- * 3. Use `fetch()` to POST the new resource to the API:
- *    - URL: './api/index.php'
- *    - Method: POST
- *    - Headers: { 'Content-Type': 'application/json' }
- *    - Body: JSON.stringify({ title, description, link })
- * 4. The API returns { success: true, id: <new id> }.
- *    Add the new resource object (including the id returned by the API)
- *    to the global `resources` array.
- * 5. Call `renderTable()` to refresh the list.
- * 6. Reset the form.
  */
 async function handleAddResource(event) {
     event.preventDefault();
@@ -125,11 +106,12 @@ async function handleAddResource(event) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: editId, title, description, link })
         });
+
         const result = await response.json();
 
         if (result.success) {
-            const index = resources.findIndex(r => r.id == editId);
-            resources[index] = { id: editId, title, description, link };
+            const index = globalThis.resources.findIndex(r => r.id == editId);
+            globalThis.resources[index] = { id: editId, title, description, link };
             editMode = false;
             editId = null;
             submitBtn.textContent = 'Add Resource';
@@ -140,21 +122,20 @@ async function handleAddResource(event) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ title, description, link })
         });
+
         const result = await response.json();
 
         if (result.success) {
-            resources.push({ id: result.id, title, description, link });
+            globalThis.resources.push({ id: result.id, title, description, link });
         }
     }
 
-    window.resources = resources;
     renderTable();
     form.reset();
 }
 
 /**
  * TODO: Implement the handleTableClick function.
- * This handles click events on the table body using event delegation.
  */
 async function handleTableClick(event) {
     const id = event.target.dataset.id;
@@ -163,17 +144,17 @@ async function handleTableClick(event) {
         const response = await fetch(`./api/index.php?id=${id}`, {
             method: 'DELETE'
         });
+
         const result = await response.json();
 
         if (result.success) {
-            resources = resources.filter(r => r.id != id);
-            window.resources = resources;
+            globalThis.resources = globalThis.resources.filter(r => r.id != id);
             renderTable();
         }
     }
 
     if (event.target.classList.contains('edit-btn')) {
-        const resource = resources.find(r => r.id == id);
+        const resource = globalThis.resources.find(r => r.id == id);
 
         document.querySelector('#resource-title').value = resource.title;
         document.querySelector('#resource-description').value = resource.description;
@@ -193,8 +174,7 @@ async function loadAndInitialize() {
     const result = await response.json();
 
     if (result.success) {
-        resources = result.data;
-        window.resources = resources;
+        globalThis.resources = result.data;
         renderTable();
     }
 
