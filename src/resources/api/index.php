@@ -74,12 +74,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-// Include the database connection file
-require_once __DIR__ . '/../config/Database.php';
-
 // Get the PDO database connection
-$database = new Database();
-$db = $database->getConnection();
+// Try getDBConnection() first (for tests), fall back to Database class (for production)
+if (function_exists('getDBConnection')) {
+    $db = getDBConnection();
+} else {
+    require_once __DIR__ . '/../config/Database.php';
+    $database = new Database();
+    $db = $database->getConnection();
+}
 
 // Get the HTTP request method
 $method = $_SERVER['REQUEST_METHOD'];
