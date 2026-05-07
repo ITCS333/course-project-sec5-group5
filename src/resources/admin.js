@@ -87,13 +87,11 @@ link.target = "_blank";
  *    append the returned <tr> to the table body.
  */
 function renderTable() {
-   const tbody = document.querySelector("#resources-tbody");
-
-  tbody.innerHTML = "";
+  resourcesTbody.innerHTML = "";
 
   resources.forEach(resource => {
     const row = createResourceRow(resource);
-    tbody.appendChild(row);
+    resourcesTbody.appendChild(row);
   });
 }
 
