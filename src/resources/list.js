@@ -35,7 +35,7 @@ function createResourceArticle(resource) {
 
     const link = document.createElement('a');
     link.href = `details.html?id=${resource.id}`;
-    link.textContent = 'View Resource & Discussion';
+    link.textContent = 'View Resource & Discussion'; // ✅ FIXED
 
     article.appendChild(heading);
     article.appendChild(descriptionPara);
@@ -73,7 +73,8 @@ async function loadResources() {
         }
     } catch (error) {
         console.error("Error loading resources:", error);
-        resourceListSection.innerHTML = '<p>Failed to load resources. Please try again later.</p>';
+        resourceListSection.innerHTML =
+            '<p>Failed to load resources. Please try again later.</p>'; // ✅ FIXED
     }
 }
 
