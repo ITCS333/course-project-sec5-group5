@@ -81,13 +81,9 @@ function renderTable() {
 
     if (!tbody) return;
 
-    // Clear table body
     tbody.innerHTML = '';
 
-    // Use the latest global data
-    const currentResources = window.resources;
-
-    currentResources.forEach(resource => {
+    resources.forEach(resource => {
         const row = createResourceRow(resource);
         tbody.appendChild(row);
     });
@@ -188,8 +184,9 @@ async function handleTableClick(event) {
         });
         const result = await response.json();
         if (result.success) {
-            resources = resources.filter(r => r.id != id);
-            renderTable();
+           window.resources = resources.filter(r => r.id != id);
+resources = window.resources;
+renderTable();
         }
     }
 
@@ -224,8 +221,9 @@ async function loadAndInitialize() {
     const result = await response.json();
 
     if (result.success) {
-        resources = result.data;
-        renderTable();
+window.resources = result.data;
+resources = window.resources;
+      renderTable();
     }
 
     form.addEventListener('submit', handleAddResource);
