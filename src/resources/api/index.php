@@ -219,7 +219,7 @@ function createResource($db, $data) {
     // Sanitize input — trim whitespace from all fields
     $title = sanitizeInput($data['title']);
     $description = isset($data['description']) ? sanitizeInput($data['description']) : '';
-    $link = trim($data['link']);
+    $link = sanitizeInput($data['link']);
     
     // Validate the link using filter_var with FILTER_VALIDATE_URL
     if (!validateUrl($link)) {
@@ -294,7 +294,7 @@ function updateResource($db, $data) {
             sendResponse(['success' => false, 'message' => 'Invalid URL format.'], 400);
         }
         $updateFields[] = "link = ?";
-        $updateValues[] = trim($data['link']);
+        $updateValues[] = sanitizeInput($data['link']);
     }
     
     // If no fields to update, return error response
@@ -421,14 +421,18 @@ function getCommentsByResourceId($db, $resourceId) {
  */
 function createComment($db, $data) {
     // Validate required fields — resource_id, author, and text
-    if (!$data || !isset($data['resource_id']) || !isset($data['author']) || !isset($data['text']) ||
-        empty(trim($data['resource_id'])) || empty(trim($data['author'])) || empty(trim($data['text']))) {
+    if (!$data || !isset($data['resource_id']) || !isset($data['author']) || !isset($data['text'])) {
         sendResponse(['success' => false, 'message' => 'Resource ID, author, and text are required.'], 400);
     }
     
     // Validate that resource_id is numeric
     if (!is_numeric($data['resource_id'])) {
         sendResponse(['success' => false, 'message' => 'Invalid resource ID.'], 400);
+    }
+    
+    // Validate that author and text are not empty after trimming
+    if (empty(trim((string)$data['author'])) || empty(trim((string)$data['text']))) {
+        sendResponse(['success' => false, 'message' => 'Resource ID, author, and text are required.'], 400);
     }
     
     $resourceId = $data['resource_id'];
@@ -615,7 +619,7 @@ function validateUrl($url) {
 function sanitizeInput($data) {
     // trim() → strip_tags() → htmlspecialchars(ENT_QUOTES, 'UTF-8')
     // Return the sanitized string
-    return htmlspecialchars(strip_tags(trim($data)), ENT_QUOTES, 'UTF-8');
+    return htmlspecialchars(strip_tags(trim((string)$data)), ENT_QUOTES, 'UTF-8');
 }
 
 
@@ -632,7 +636,7 @@ function validateRequiredFields($data, $requiredFields) {
     $missing = [];
     
     foreach ($requiredFields as $field) {
-        if (!isset($data[$field]) || empty(trim($data[$field]))) {
+        if (!isset($data[$field]) || empty(trim((string)$data[$field]))) {
             $missing[] = $field;
         }
     }
