@@ -86,10 +86,12 @@ link.target = "_blank";
  * 3. For each resource, call `createResourceRow()` and
  *    append the returned <tr> to the table body.
  */
-function renderTable() {
+function renderTable(arr) {
+  const resourcesToRender = arr !== undefined ? arr : resources;
+  
   resourcesTbody.innerHTML = "";
 
-  resources.forEach(resource => {
+  resourcesToRender.forEach(resource => {
     const row = createResourceRow(resource);
     resourcesTbody.appendChild(row);
   });
