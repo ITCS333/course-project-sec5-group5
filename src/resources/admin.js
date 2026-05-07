@@ -13,6 +13,7 @@
 
 // --- Global Data Store ---
 window.resources = window.resources || [];
+var resources = window.resources;
 let editMode = false;
 let editId = null; 
 
@@ -82,7 +83,11 @@ function renderTable() {
 
     tbody.innerHTML = '';
 
-    window.resources.forEach(resource => {
+    const data = (Array.isArray(resources) && resources.length)
+        ? resources
+        : window.resources;
+
+    data.forEach(resource => {
         const row = createResourceRow(resource);
         tbody.appendChild(row);
     });
@@ -120,12 +125,11 @@ async function handleAddResource(event) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: editId, title, description, link })
         });
-
         const result = await response.json();
 
         if (result.success) {
-            const index = window.resources.findIndex(r => r.id == editId);
-            window.resources[index] = { id: editId, title, description, link };
+            const index = resources.findIndex(r => r.id == editId);
+            resources[index] = { id: editId, title, description, link };
             editMode = false;
             editId = null;
             submitBtn.textContent = 'Add Resource';
@@ -136,14 +140,14 @@ async function handleAddResource(event) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ title, description, link })
         });
-
         const result = await response.json();
 
         if (result.success) {
-            window.resources.push({ id: result.id, title, description, link });
+            resources.push({ id: result.id, title, description, link });
         }
     }
 
+    window.resources = resources;
     renderTable();
     form.reset();
 }
@@ -151,33 +155,6 @@ async function handleAddResource(event) {
 /**
  * TODO: Implement the handleTableClick function.
  * This handles click events on the table body using event delegation.
- * It should:
- *
- * If the clicked element has class "delete-btn":
- * 1. Get the resource id from the button's data-id attribute.
- * 2. Use `fetch()` to DELETE the resource via the API:
- *    - URL: `./api/index.php?id=${id}`
- *    - Method: DELETE
- * 3. On success, remove the resource from the global `resources` array
- *    by filtering out the entry with the matching id.
- * 4. Call `renderTable()` to refresh the list.
- *
- * If the clicked element has class "edit-btn":
- * 1. Get the resource id from the button's data-id attribute.
- * 2. Find the matching resource in the global `resources` array.
- * 3. Populate the form fields (id="resource-title", id="resource-description",
- *    id="resource-link") with the resource's current values so the admin
- *    can edit them.
- * 4. Change the submit button (id="add-resource") text to "Update Resource"
- *    to indicate edit mode.
- * 5. On form submit, use `fetch()` to PUT the updated resource to the API:
- *    - URL: './api/index.php'
- *    - Method: PUT
- *    - Headers: { 'Content-Type': 'application/json' }
- *    - Body: JSON.stringify({ id, title, description, link })
- * 6. On success, update the matching resource in the global `resources` array.
- * 7. Call `renderTable()` and reset the form back to "Add" mode,
- *    restoring the submit button text to "Add Resource".
  */
 async function handleTableClick(event) {
     const id = event.target.dataset.id;
@@ -186,17 +163,17 @@ async function handleTableClick(event) {
         const response = await fetch(`./api/index.php?id=${id}`, {
             method: 'DELETE'
         });
-
         const result = await response.json();
 
         if (result.success) {
-            window.resources = window.resources.filter(r => r.id != id);
+            resources = resources.filter(r => r.id != id);
+            window.resources = resources;
             renderTable();
         }
     }
 
     if (event.target.classList.contains('edit-btn')) {
-        const resource = window.resources.find(r => r.id == id);
+        const resource = resources.find(r => r.id == id);
 
         document.querySelector('#resource-title').value = resource.title;
         document.querySelector('#resource-description').value = resource.description;
@@ -210,24 +187,14 @@ async function handleTableClick(event) {
 
 /**
  * TODO: Implement the loadAndInitialize function.
- * This function must be 'async'.
- * It should:
- * 1. Use `fetch()` to GET all resources from the API:
- *    - URL: './api/index.php'
- *    - The API returns { success: true, data: [...] }
- * 2. Store the resources array (from `data`) in the global `resources` variable.
- * 3. Call `renderTable()` to populate the table for the first time.
- * 4. Add the 'submit' event listener to the resource form (id="resource-form"),
- *    calling `handleAddResource`.
- * 5. Add the 'click' event listener to the table body (id="resources-tbody"),
- *    calling `handleTableClick`.
  */
 async function loadAndInitialize() {
     const response = await fetch('./api/index.php');
     const result = await response.json();
 
     if (result.success) {
-        window.resources = result.data;
+        resources = result.data;
+        window.resources = resources;
         renderTable();
     }
 
