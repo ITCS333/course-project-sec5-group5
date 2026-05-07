@@ -141,14 +141,17 @@ async function handleAddComment(event) {
             // The API returns the new comment with its id; we need the full object.
             // Since the API might return just { success, id } or { success, data },
             // we'll construct a local comment object.
-            const newComment = {
-                id: result.id,
-                resource_id: currentResourceId,
-                author: 'Student',
-                text: text,
-                created_at: new Date().toISOString()
-            };
-            currentComments.push(newComment);
+          if (result.data) {
+    currentComments.push(result.data);
+} else {
+    currentComments.push({
+        id: result.id,
+        resource_id: currentResourceId,
+        author: 'Student',
+        text: text,
+        created_at: new Date().toISOString()
+    });
+}
             renderComments();
             newCommentInput.value = '';
         } else {
