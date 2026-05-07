@@ -76,23 +76,17 @@ function createResourceRow(resource) {
  *    append the returned <tr> to the table body.
  */
 function renderTable() {
-    // 1. Always re-select the tbody to ensure we have the live DOM element
     const tbody = document.getElementById('resources-tbody');
+
     if (!tbody) return;
 
-    // 2. Clear the table body
-    tbody.innerHTML = '';
+     tbody.innerHTML = '';
 
-    // 3. Sync with window.resources in case the test suite modified it directly
-    const dataToRender = window.resources || resources;
-
-    // 4. Loop through and append rows
-    dataToRender.forEach(resource => {
+     resources.forEach(resource => {
         const row = createResourceRow(resource);
         tbody.appendChild(row);
     });
 }
-
 /**
  * TODO: Implement the handleAddResource function.
  * This is the event handler for the form's 'submit' event.
