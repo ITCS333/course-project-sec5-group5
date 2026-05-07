@@ -12,7 +12,8 @@
 */
 
 // --- Global Data Store ---
-var resources = window.resources || [];
+window.resources = window.resources || [];
+var resources = window.resources;
 let editMode = false;
 let editId = null; 
 
@@ -80,9 +81,13 @@ function renderTable() {
 
     if (!tbody) return;
 
-     tbody.innerHTML = '';
+    // Clear table body
+    tbody.innerHTML = '';
 
-     resources.forEach(resource => {
+    // Use the latest global data
+    const currentResources = window.resources;
+
+    currentResources.forEach(resource => {
         const row = createResourceRow(resource);
         tbody.appendChild(row);
     });
