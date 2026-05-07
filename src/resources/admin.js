@@ -49,10 +49,10 @@ function createResourceRow(resource) {
   descriptionTd.textContent = resource.description;
 
   const linkTd = document.createElement("td");
-  const link = document.createElement("a");
-  link.href = resource.link;
-  link.textContent = "View";
-  link.target = "_blank";
+const link = document.createElement("a");
+link.href = resource.link;
+link.textContent = resource.link;
+link.target = "_blank";
   linkTd.appendChild(link);
 
   const actionsTd = document.createElement("td");
@@ -87,12 +87,13 @@ function createResourceRow(resource) {
  *    append the returned <tr> to the table body.
  */
 function renderTable() {
-  resourcesTbody.innerHTML = "";
+const tbody = document.querySelector("#resources-tbody");
+tbody.innerHTML = "";
 
-  resources.forEach(resource => {
-    const row = createResourceRow(resource);
-    resourcesTbody.appendChild(row);
-  });
+resources.forEach(resource => {
+  const row = createResourceRow(resource);
+  tbody.appendChild(row);
+});
 }
 
 /**
