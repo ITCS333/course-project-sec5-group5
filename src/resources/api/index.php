@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // Include the database connection file
-require_once './config/Database.php';
+require_once __DIR__ . '/../config/Database.php';
 
 // Get the PDO database connection
 $database = new Database();
@@ -86,6 +86,11 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 // Get the request body for POST and PUT requests
 $rawData = file_get_contents('php://input');
+
+// Validate JSON and decode
+if ($rawData && json_last_error() !== JSON_ERROR_NONE) {
+    sendResponse(['success' => false, 'message' => 'Invalid JSON.'], 400);
+}
 $data = json_decode($rawData, true);
 
 // Parse query parameters from $_GET
@@ -135,8 +140,11 @@ function getAllResources($db) {
         $order = 'desc';
     }
     
+    // Normalize order to uppercase
+    $order = strtoupper($order);
+    
     // Add ORDER BY clause to the query
-    $sql .= " ORDER BY " . $sort . " " . strtoupper($order);
+    $sql .= " ORDER BY " . $sort . " " . $order;
     
     // Prepare the statement using PDO
     $stmt = $db->prepare($sql);
@@ -620,32 +628,6 @@ function sanitizeInput($data) {
     // trim() → strip_tags() → htmlspecialchars(ENT_QUOTES, 'UTF-8')
     // Return the sanitized string
     return htmlspecialchars(strip_tags(trim((string)$data)), ENT_QUOTES, 'UTF-8');
-}
-
-
-/**
- * Helper: Check that all required fields exist and are non-empty in $data.
- * 
- * @param  array $data            Associative array of input data.
- * @param  array $requiredFields  List of field names that must be present.
- * @return array  ['valid' => bool, 'missing' => string[]]
- */
-function validateRequiredFields($data, $requiredFields) {
-    // Loop through $requiredFields
-    // Collect any that are absent or empty in $data into a $missing array
-    $missing = [];
-    
-    foreach ($requiredFields as $field) {
-        if (!isset($data[$field]) || empty(trim((string)$data[$field]))) {
-            $missing[] = $field;
-        }
-    }
-    
-    // Return ['valid' => (count($missing) === 0), 'missing' => $missing]
-    return [
-        'valid' => count($missing) === 0,
-        'missing' => $missing
-    ];
 }
 
 ?>
