@@ -205,11 +205,12 @@ async function handleTableClick(event) {
 
     if (response.ok) {
       resources = resources.filter(r => r.id != id);
+      editId = null;
+      submitButton.textContent = "Add Resource";
+      resourceForm.reset();
       renderTable();
     }
-  }
-
-  if (event.target.classList.contains("edit-btn")) {
+  } else if (event.target.classList.contains("edit-btn")) {
     const resource = resources.find(r => r.id == id);
     document.querySelector("#resource-title").value = resource.title;
     document.querySelector("#resource-description").value = resource.description;
