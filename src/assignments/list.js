@@ -23,6 +23,7 @@
 */
 
 // --- Element Selections ---
+const assignmentListSection = document.getElementById('assignment-list-section')
 // TODO: Select the section for the assignment list using its
 //       id 'assignment-list-section'.
 
@@ -54,7 +55,13 @@
  * the assignments table) so that details.js can read the id from the URL.
  */
 function createAssignmentArticle(assignment) {
-  // ... your implementation here ...
+   const article = document.createElement('article');
+   article.innerHTML = `
+     <h2>${assignment.title}</h2>
+     <p>Due: ${assignment.due_date}</p>
+     <p>${assignment.description}</p>
+    <a href="details.html?id=${assignment.id}">View Details & Discussion</a> `;
+   return article;
 }
 
 /**
@@ -71,7 +78,16 @@ function createAssignmentArticle(assignment) {
  *    - Append the returned <article> to the list section.
  */
 async function loadAssignments() {
-  // ... your implementation here ...
+  const response = await fetch('./api/index.php');
+   const result = await response.json();
+
+   if (result.success) {
+       assignmentListSection.innerHTML = ''; // تنظيف السكشن قبل العرض
+       result.data.forEach(assignment => {
+           const article = createAssignmentArticle(assignment);
+           assignmentListSection.appendChild(article);
+       });
+   }
 }
 
 // --- Initial Page Load ---
