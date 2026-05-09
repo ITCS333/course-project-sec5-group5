@@ -1,7 +1,15 @@
 
 <?php
 header("Content-Type: application/json");
-require_once 'db.php';
+
+if (file_exists('db.php')) {
+   require_once 'db.php';
+} elseif (file_exists('../db.php')) {
+   require_once '../db.php';
+} else {
+   echo json_encode(["success" => false, "message" => "Database file not found."]);
+   exit;
+}
 
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
@@ -22,7 +30,7 @@ try {
                    $item['files'] = json_decode($item['files'], true) ?: [];
                    echo json_encode(["success" => true, "data" => $item]);
                } else {
-                   echo json_encode(["success" => false, "message" => "Not found"]);
+                   echo json_encode(["success" => false]);
                }
            } else {
                $stmt = $pdo->query("SELECT * FROM assignments ORDER BY due_date ASC");
@@ -47,7 +55,7 @@ try {
                $stmt = $pdo->prepare("INSERT INTO assignments (title, due_date, description, files) VALUES (?, ?, ?, ?)");
                $files = json_encode($data['files'] ?? []);
                $stmt->execute([$data['title'], $data['due_date'], $data['description'], $files]);
-               echo json_encode(["success" => true, "id" => $pdo->lastInsertId()]);
+               echo json_encode(["success" => true, "id" => (int)$pdo->lastInsertId()]);
            }
            break;
 
@@ -60,13 +68,16 @@ try {
            break;
 
        case 'DELETE':
-           $id = $_GET['id'];
-           $stmt = $pdo->prepare("DELETE FROM assignments WHERE id = ?");
-           $stmt->execute([$id]);
-           echo json_encode(["success" => true]);
+           $id = $_GET['id'] ?? null;
+           if ($id) {
+               $stmt = $pdo->prepare("DELETE FROM assignments WHERE id = ?");
+               $stmt->execute([$id]);
+               echo json_encode(["success" => true]);
+           }
            break;
    }
 } catch (Exception $e) {
-   echo json_encode(["success" => false, "message" => $e->getMessage()]);
+   http_response_code(500);
+   echo json_encode(["success" => false, "error" => $e->getMessage()]);
 }
 
