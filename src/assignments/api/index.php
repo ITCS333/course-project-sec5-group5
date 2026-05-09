@@ -6,9 +6,12 @@ if (file_exists('db.php')) {
    require_once 'db.php';
 } elseif (file_exists('../db.php')) {
    require_once '../db.php';
-} else {
-   echo json_encode(["success" => false, "message" => "Database file not found."]);
-   exit;
+} elseif (file_exists('../../db.php')) {
+   require_once '../../db.php';
+}
+
+if (!isset($pdo) && isset($conn)) {
+   $pdo = $conn;
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -18,9 +21,8 @@ try {
    switch ($method) {
        case 'GET':
            if ($action === 'comments') {
-               $assignment_id = $_GET['assignment_id'];
                $stmt = $pdo->prepare("SELECT * FROM comments_assignment WHERE assignment_id = ? ORDER BY created_at ASC");
-               $stmt->execute([$assignment_id]);
+               $stmt->execute([$_GET['assignment_id']]);
                echo json_encode(["success" => true, "data" => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
            } elseif (isset($_GET['id'])) {
                $stmt = $pdo->prepare("SELECT * FROM assignments WHERE id = ?");
@@ -53,25 +55,22 @@ try {
                echo json_encode(["success" => true, "data" => $stmt->fetch(PDO::FETCH_ASSOC)]);
            } else {
                $stmt = $pdo->prepare("INSERT INTO assignments (title, due_date, description, files) VALUES (?, ?, ?, ?)");
-               $files = json_encode($data['files'] ?? []);
-               $stmt->execute([$data['title'], $data['due_date'], $data['description'], $files]);
+               $stmt->execute([$data['title'], $data['due_date'], $data['description'], json_encode($data['files'] ?? [])]);
                echo json_encode(["success" => true, "id" => (int)$pdo->lastInsertId()]);
            }
            break;
 
        case 'PUT':
            $data = json_decode(file_get_contents("php://input"), true);
-           $files = json_encode($data['files'] ?? []);
            $stmt = $pdo->prepare("UPDATE assignments SET title=?, due_date=?, description=?, files=? WHERE id=?");
-           $stmt->execute([$data['title'], $data['due_date'], $data['description'], $files, $data['id']]);
+           $stmt->execute([$data['title'], $data['due_date'], $data['description'], json_encode($data['files'] ?? []), $data['id']]);
            echo json_encode(["success" => true]);
            break;
 
        case 'DELETE':
-           $id = $_GET['id'] ?? null;
-           if ($id) {
+           if (isset($_GET['id'])) {
                $stmt = $pdo->prepare("DELETE FROM assignments WHERE id = ?");
-               $stmt->execute([$id]);
+               $stmt->execute([$_GET['id']]);
                echo json_encode(["success" => true]);
            }
            break;
