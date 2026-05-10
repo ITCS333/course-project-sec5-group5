@@ -35,7 +35,6 @@ const weeksTableBody = document.querySelector('#weeks-tbody');
  * - A "Delete" button with class "delete-btn" and `data-id="${id}"`.
  */
 function createWeekRow(week) {
-  // ... your implementation here ...
   const tr = document.createElement('tr');
 
   const titleTd = document.createElement('td');
@@ -52,12 +51,12 @@ function createWeekRow(week) {
   const editBtn = document.createElement('button');
   editBtn.textContent = 'Edit';
   editBtn.className = 'edit-btn';
-  editBtn.setAttribute('data-id', week.id);
+  editBtn.dataset.id = week.id;
 
   const deleteBtn = document.createElement('button');
   deleteBtn.textContent = 'Delete';
   deleteBtn.className = 'delete-btn';
-  deleteBtn.setAttribute('data-id', week.id);
+  deleteBtn.dataset.id = week.id;
 
   actionTd.appendChild(editBtn);
   actionTd.appendChild(deleteBtn);
@@ -79,7 +78,6 @@ function createWeekRow(week) {
  * append the resulting <tr> to `weeksTableBody`.
  */
 function renderTable() {
-  // ... your implementation here ...
   weeksTableBody.innerHTML = '';
 
   weeks.forEach(week => {
@@ -102,7 +100,6 @@ function renderTable() {
  * 7. Reset the form.
  */
 function handleAddWeek(event) {
-  // ... your implementation here ...
   event.preventDefault();
 
   const title = document.querySelector('#week-title').value;
@@ -110,27 +107,29 @@ function handleAddWeek(event) {
   const description = document.querySelector('#week-description').value;
   const linksText = document.querySelector('#week-links').value;
 
-  const links = linksText.split('\n').filter(link => link.trim() !== '');
+  const links = linksText
+    .split('\n')
+    .filter(link => link.trim() !== '');
 
   const newWeek = {
-    title: title,
+    id: `week_${Date.now()}`,
+    title,
     start_date: startDate,
-    description: description,
-    links: links
+    description,
+    links
   };
-  
+
   fetch('./api/index.php', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json'
+    },
     body: JSON.stringify(newWeek)
-  })
-    .then(response => response.json())
-    .then(data => {
-      weeks.push(data);
-      renderTable();
-      weekForm.reset();
-    })
-    .catch(error => console.error('Error adding week:', error));
+  });
+
+  weeks.push(newWeek);
+  renderTable();
+  weekForm.reset();
 }
 
 /**
@@ -144,33 +143,34 @@ function handleAddWeek(event) {
  * 4. Call `renderTable()` to refresh the list.
  */
 function handleTableClick(event) {
-  // ... your implementation here ...
   const target = event.target;
 
   if (target.classList.contains('delete-btn')) {
-    const idToDelete = target.getAttribute('data-id');
-    
+    const idToDelete = target.dataset.id;
+
     fetch('./api/index.php', {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({ id: idToDelete })
-    })
-      .then(response => response.json())
-      .then(data => {
-        weeks = weeks.filter(week => week.id !== idToDelete);
-        renderTable();
-      })
-      .catch(error => console.error('Error deleting week:', error));
-  } else if (target.classList.contains('edit-btn')) {
-    const idToEdit = target.getAttribute('data-id');
-    const weekToEdit = weeks.find(week => week.id === idToEdit);
-    
-    if (weekToEdit) {
-      document.querySelector('#week-title').value = weekToEdit.title;
-      document.querySelector('#week-start-date').value = weekToEdit.start_date;
-      document.querySelector('#week-description').value = weekToEdit.description;
-      document.querySelector('#week-links').value = weekToEdit.links.join('\n');
-    }
+    });
+
+    weeks = weeks.filter(week => String(week.id) !== String(idToDelete));
+    renderTable();
+  }
+
+  if (target.classList.contains('edit-btn')) {
+    const row = target.closest('tr');
+
+    document.querySelector('#week-title').value =
+      row.children[0].textContent;
+
+    document.querySelector('#week-start-date').value =
+      row.children[1].textContent;
+
+    document.querySelector('#week-description').value =
+      row.children[2].textContent;
   }
 }
 
@@ -185,14 +185,11 @@ function handleTableClick(event) {
  * 5. Add the 'click' event listener to `weeksTableBody` (calls `handleTableClick`). 
  */
 async function loadAndInitialize() {
-   // ... your implementation here ...
   try {
     const response = await fetch('./api/index.php');
     const result = await response.json();
 
-    weeks = Array.isArray(result)
-      ? result
-      : result.data || [];
+    weeks = Array.isArray(result) ? result : [];
 
     renderTable();
 
