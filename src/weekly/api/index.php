@@ -283,6 +283,7 @@ function updateWeek(PDO $db, array $data): void
     // If not, sendResponse HTTP 400.
     if (!isset($data['id'])) {
         sendResponse(['success' => false, 'message' => 'Week ID is required.'], 400);
+        return;
     }
     $id = (int)$data['id'];
 
@@ -292,6 +293,7 @@ function updateWeek(PDO $db, array $data): void
     $check->execute([$id]);
     if (!$check->fetch()) {
         sendResponse(['success' => false, 'message' => 'Week not found.'], 404);
+        return;
     }
 
     // TODO: Dynamically build the SET clause for whichever of
@@ -312,6 +314,7 @@ function updateWeek(PDO $db, array $data): void
         $d = DateTime::createFromFormat('Y-m-d', $start_date);
         if (!$d || $d->format('Y-m-d') !== $start_date) {
             sendResponse(['success' => false, 'message' => 'Invalid start date format. Use YYYY-MM-DD.'], 400);
+            return;
         }
         $fields[] = "start_date = ?";
         $params[] = $start_date;
@@ -330,6 +333,7 @@ function updateWeek(PDO $db, array $data): void
     // TODO: If no updatable fields are present, sendResponse HTTP 400.
      if (empty($fields)) {
         sendResponse(['success' => false, 'message' => 'No fields provided for update.'], 400);
+        return;
     }
 
 
@@ -346,6 +350,7 @@ function updateWeek(PDO $db, array $data): void
     try {
         $stmt = $db->prepare($sql);
         $stmt->execute($params);
+        $success = $stmt->execute($params);
 
         if ($success) {
             sendResponse(['success' => true, 'message' => 'Week updated successfully.'], 200);
