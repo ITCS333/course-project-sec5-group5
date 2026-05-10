@@ -2,39 +2,80 @@
   Requirement: Populate the "Weekly Course Breakdown" list page.
 
   Instructions:
-  1. This file is already linked to `list.html` via:
-         <script src="list.js" defer></script>
+  1. Link this file to `list.html` using:
+     <script src="list.js" defer></script>
 
-  2. In `list.html`, the <section id="week-list-section"> is the container
-     that this script populates.
+  2. In `list.html`, add an `id="week-list-section"` to the
+     <section> element that will contain the weekly articles.
 
   3. Implement the TODOs below.
 */
 
 // --- Element Selections ---
-// TODO: Select the section for the week list using its id 'week-list-section'.
+// TODO: Select the section for the week list ('#week-list-section').
+const listSection = document.querySelector('#week-list-section');
+
 
 // --- Functions ---
 
 /**
- * TODO: Implement createWeekArticle.
- *
- * Parameters:
- *   week — one object from the API response with the shape:
- *     {
- *       id:          number,   // integer primary key from the weeks table
- *       title:       string,
- *       start_date:  string,   // "YYYY-MM-DD" — matches the SQL column name
- *       description: string,
- *       links:       string[]  // already decoded array of URL strings
- *     }
- *
- * Returns:
- *   An <article> element matching the structure shown in list.html:
- *     <article>
- *       <h2>{title}</h2>
- *       <p>Starts on: {start_date}</p>
- *       <p>{description}</p>
+ * TODO: Implement the createWeekArticle function.
+ * It takes one week object {id, title, startDate, description}.
+ * It should return an <article> element matching the structure in `list.html`.
+ * - The "View Details & Discussion" link's `href` MUST be set to `details.html?id=${id}`.
+ * (This is how the detail page will know which week to load).
+ */
+function createWeekArticle(week) {
+  // ... your implementation here ...
+  const article = document.createElement('article');
+
+  const heading2 = document.createElement('h2');
+  heading2.textContent = week.title;
+  const pDate = document.createElement('p');
+  pDate.textContent = `Starts on: ${week.startDate}`;
+
+  const pDescription = document.createElement('p');
+  pDescription.textContent = week.description;
+
+  const link = document.createElement('a');
+  link.href = `details.html?id=${week.id}`; 
+  link.textContent = 'View Details & Discussion';
+
+  article.appendChild(heading2);
+  article.appendChild(pDate);
+  article.appendChild(pDescription);
+  article.appendChild(link);
+
+  return article;
+}
+
+/**
+ * TODO: Implement the loadWeeks function.
+ * This function needs to be 'async'.
+ * It should:
+ * 1. Use `fetch()` to get data from 'weeks.json'.
+ * 2. Parse the JSON response into an array.
+ * 3. Clear any existing content from `listSection`.
+ * 4. Loop through the weeks array. For each week:
+ * - Call `createWeekArticle()`.
+ * - Append the returned <article> element to `listSection`.
+ */
+async function loadWeeks() {
+  // ... your implementation here ...
+  const response = await fetch('weeks.json');
+  const weeks = await response.json();
+
+  listSection.innerHTML = '';
+
+  for (const week of weeks) {
+    const article = createWeekArticle(week);
+    listSection.appendChild(article);
+  }
+}
+
+// --- Initial Page Load ---
+// Call the function to populate the page.
+loadWeeks(); *       <p>{description}</p>
  *       <a href="details.html?id={id}">View Details & Discussion</a>
  *     </article>
  *
