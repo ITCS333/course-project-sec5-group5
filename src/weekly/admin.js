@@ -158,10 +158,11 @@ async function loadAndInitialize() {
    // ... your implementation here ...
   try {
     const response = await fetch('weeks.json');
-    const data = await response.json();
+    const result = await response.json();
 
-    // Fix: ensure weeks is always an array
-    weeks = Array.isArray(data) ? data : data.weeks;
+weeks = Array.isArray(result)
+  ? result
+  : result.data || [];
 
     renderTable();
 
