@@ -152,7 +152,7 @@ function handleTableClick(event) {
  * 2. Parse the JSON response and store the result in the global `weeks` array.
  * 3. Call `renderTable()` to populate the table for the first time.
  * 4. Add the 'submit' event listener to `weekForm` (calls `handleAddWeek`).
- * 5. Add the 'click' event listener to `weeksTableBody` (calls `handleTableClick`).
+ * 5. Add the 'click' event listener to `weeksTableBody` (calls `handleTableClick`). 
  */
 async function loadAndInitialize() {
   // ... your implementation here ...
