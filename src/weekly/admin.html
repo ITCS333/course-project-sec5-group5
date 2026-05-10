@@ -1,134 +1,146 @@
-<?php
-header('Content-Type: application/json');
+<!--
+  Requirement: Create the Admin View for the Weekly Breakdown
 
-try {
-    $method = $_SERVER['REQUEST_METHOD'];
-    $action = $_GET['action'] ?? null;
+  Instructions:
+  Fill in the HTML elements as described in the comments.
+  This page allows the teacher (admin) to perform full CRUD operations on the weekly course content.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- TODO: Add the 'meta' tag for character encoding (UTF-8). -->
+     <meta charset="UTF-8"> 
     
-    // Route requests
-    if ($method === 'GET') {
-        handleGet();
-    } elseif ($method === 'POST') {
-        handlePost($action);
-    } elseif ($method === 'PUT') {
-        handlePut();
-    } elseif ($method === 'DELETE') {
-        handleDelete($action);
-    } else {
-        http_response_code(405);
-        echo json_encode(['success' => false, 'error' => 'Method not allowed']);
-    }
-} catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
-}
+    <!-- TODO: Add the responsive 'viewport' meta tag. -->
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     
 
-function handleGet() {
-    $id = $_GET['id'] ?? null;
-    $search = $_GET['search'] ?? null;
-    
-    // Load your database/data logic
-    if ($id) {
-        $assignment = getAssignmentById($id);
-        if (!$assignment) {
-            http_response_code(404);
-            echo json_encode(['success' => false, 'error' => 'Not found']);
-            return;
-        }
-        echo json_encode(['success' => true, 'data' => $assignment]);
-    } else {
-        $assignments = getAllAssignments($search);
-        echo json_encode(['success' => true, 'data' => $assignments]);
-    }
-}
+    <!-- TODO: Add a title, e.g., "Manage Weekly Breakdown". -->
+     <title>Manage Weekly Breakdown</title>
 
-function handlePost($action) {
-    $body = json_decode(file_get_contents('php://input'), true);
-    
-    if ($action === 'comment') {
-        // Validate comment fields
-        if (empty($body['assignment_id']) || empty($body['text'])) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Missing required fields']);
-            return;
-        }
-        // Create comment logic
-        $id = createComment($body);
-        http_response_code(201);
-        echo json_encode(['success' => true, 'id' => $id]);
-    } else {
-        // Validate assignment fields
-        if (empty($body['title']) || empty($body['description']) || empty($body['due_date'])) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Missing required fields']);
-            return;
-        }
-        // Validate date format YYYY-MM-DD
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $body['due_date'])) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Invalid date format']);
-            return;
-        }
-        $id = createAssignment($body);
-        http_response_code(201);
-        echo json_encode(['success' => true, 'id' => $id]);
-    }
-}
+    <!-- TODO: Link to your CSS framework or stylesheet. -->
+     <link rel="stylesheet" href="../common/styles.css">
+</head>
+<body>
 
-function handlePut() {
-    $body = json_decode(file_get_contents('php://input'), true);
-    $id = $body['id'] ?? null;
-    
-    if (!$id || !assignmentExists($id)) {
-        http_response_code(404);
-        echo json_encode(['success' => false, 'error' => 'Not found']);
-        return;
-    }
-    
-    if (isset($body['due_date']) && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $body['due_date'])) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'Invalid date format']);
-        return;
-    }
-    
-    updateAssignment($id, $body);
-    echo json_encode(['success' => true]);
-}
+    <!-- TODO: Create a 'header' with a main heading ('h1') "Manage Weekly Breakdown". -->
+     <h1>Manage Weekly Breakdown</h1>
 
-function handleDelete($action) {
-    if ($action === 'delete_comment') {
-        $id = $_GET['comment_id'] ?? null;
-        if (!$id || !commentExists($id)) {
-            http_response_code(404);
-            echo json_encode(['success' => false, 'error' => 'Not found']);
-            return;
-        }
-        deleteComment($id);
-        echo json_encode(['success' => true]);
-    } else {
-        $id = $_GET['id'] ?? null;
-        if (!$id || !assignmentExists($id)) {
-            http_response_code(404);
-            echo json_encode(['success' => false, 'error' => 'Not found']);
-            return;
-        }
-        deleteAssignment($id);
-        echo json_encode(['success' => true
-
-        <section>
-            <h2>Current Weekly Breakdown</h2>
+    <!-- TODO: Create the 'main' content area. -->
+     <main>
+
+        <!-- Section 1: Add/Edit Week Form -->
+        <!-- TODO: Create a 'section' for the form. -->
+         <section>
+            <!-- TODO: Add a sub-heading ('h2') "Add a New Week". -->
+             <h2>Add a New Week</h2>
+
+            <!-- TODO: Create a 'form' with an id "week-form". Action can be '#'. -->
+             <form id="week-form" action="#">
+                <!-- TODO: Use a 'fieldset' to group the form controls. -->
+                 <fieldset>
+
+                    <!-- TODO: Add a 'legend', e.g., "Weekly Details". -->
+                     <legend>Weekly Details</legend>
+
+                    <!-- TODO: Add a 'label' and 'input' for the week's title.
+                         - label 'for': "week-title"
+                         - input 'id': "week-title", type="text", required
+                         - Example placeholder: "Week 1: Introduction to HTML" -->
+                         <label for="week-title">week-title:</label>
+                         <input id="week-title" type="text" required placeholder="Week 1: Introduction to HTML">
+
+
+                    <!-- TODO: Add a 'label' and 'input' for the week's starting date.
+                         - label 'for': "week-start-date"
+                         - input 'id': "week-start-date", type="date", required -->
+                         <label for="week-start-date">week's starting date</label>
+                         <input id="week-start-date" type="date" required>
+
+
+
+                    <!-- TODO: Add a 'label' and 'textarea' for the week's description and notes.
+                         - label 'for': "week-description"
+                         - textarea 'id': "week-description", rows="5" -->
+                          <label for="week-description">week's description</label>
+                         <textarea id="week-description" rows="5"></textarea>
+
+                    
+                    <!-- TODO: Add a 'label' and 'textarea' for links to exercises or resources (one link per line).
+                         - label 'for': "week-links"
+                         - textarea 'id': "week-links", rows="3" -->
+                         <label for="week-links">week's links</label>
+                         <textarea id="week-links" rows="3"></textarea>
+
+                    <!-- TODO: Add a 'button' to submit the form.
+                         - id="add-week", type="submit", Text: "Add Week" -->
+                        <button id="add-week" type="submit">Add Week</button>
+
+                <!-- End of fieldset. -->
+                 </fieldset>
+            <!-- End of form. -->
+             </form>
+        <!-- End of form section. -->
+         </section>
+
+
+        <!-- Section 2: Existing Weekly Entries -->
+        <!-- TODO: Create a 'section' to display the list of current weeks. -->
+         <section>
+            <!-- TODO: Add a sub-heading ('h2') "Current Weekly Breakdown". -->
+             <h2>Current Weekly Breakdown</h2>
+
+            <!-- TODO: Create a 'table' with id "weeks-table". -->
+                <!-- TODO: Create a 'thead' and a 'tr' inside it. -->
+                    <!-- TODO: Add 'th' elements for "Week Title", "Description", and "Actions". -->
             <table id="weeks-table">
                 <thead>
                     <tr>
                         <th>Week Title</th>
-                        <th>Start Date</th>
                         <th>Description</th>
                         <th>Actions</th>
                     </tr>
-                </thead>
-                <tbody id="weeks-tbody"></tbody>
-            </table>
-        </section>
+                </thead>       
+                
+                <!-- TODO: Create a 'tbody' for the data. -->
+                 <tbody id="weeks-tbody">
+                    <!-- Example Row 1: -->
+                    <tr>
+                        <td>Week 1: Intro to HTML</td>
+                        <td>we will cover fundamentals of HTML</td>
+                        <td><button>Edit</button>
+                            <button>Delete</button>
+                        </td>
+                    </tr>
+                    <!-- Example Row 2: -->
+                     <tr>
+                        <td>Week 2: Intro to CSS</td>
+                        <td>we will cover fundamentals of CSS</td>
+                        <td><button>Edit</button>
+                            <button>Delete</button>
+                        </td>
+                    </tr>
+                    <!-- TODO: Add 1-2 rows of dummy data to see the structure. -->
+                    <!-- Example Row 1: -->
+                    <!-- TODO: Create a 'tr' for the first week. -->
+                        <!-- TODO: Add 'td' cells for a title (e.g., "Week 1: Intro to HTML") and a short description. -->
+                        
+                        <!-- TODO: Add a 'td' containing the action buttons. -->
+                            <!-- TODO: Add an "Edit" button. -->
+                            <!-- TODO: Add a "Delete" button. -->
+                        <!-- End of actions 'td'. -->
+                    <!-- End of the row. -->
+
+                <!-- End of tbody. -->
+                 </tbody>
+
+            <!-- End of table. -->
+             </table>  
+        <!-- End of list section. -->
+         </section>
+
+    <!-- End of main. -->
     </main>
+    <script src="admin.js" defer></script>
 </body>
 </html>
