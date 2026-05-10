@@ -160,7 +160,7 @@ function renderComments(comments) {
 function handleAddComment(event) {
   event.preventDefault();
 
-  const textarea = document.querySelector('#comment-textarea');
+  const textarea = document.querySelector('#comment-textarea') || document.querySelector('#new-comment');
   if (!textarea || !textarea.value.trim()) {
     return;
   }
@@ -225,10 +225,152 @@ async function initializePage() {
   }
 }
 
+/**
+ * Create a table row for a week.
+ */
+function createWeekRow(week) {
+  const tr = document.createElement('tr');
+
+  const titleTd = document.createElement('td');
+  titleTd.textContent = week.title;
+
+  const startDateTd = document.createElement('td');
+  startDateTd.textContent = week.start_date;
+
+  const descriptionTd = document.createElement('td');
+  descriptionTd.textContent = week.description;
+
+  const actionsTd = document.createElement('td');
+
+  const editBtn = document.createElement('button');
+  editBtn.classList.add('edit-btn');
+  editBtn.textContent = 'Edit';
+  editBtn.setAttribute('data-id', week.id);
+
+  const deleteBtn = document.createElement('button');
+  deleteBtn.classList.add('delete-btn');
+  deleteBtn.textContent = 'Delete';
+  deleteBtn.setAttribute('data-id', week.id);
+
+  actionsTd.appendChild(editBtn);
+  actionsTd.appendChild(deleteBtn);
+
+  tr.appendChild(titleTd);
+  tr.appendChild(startDateTd);
+  tr.appendChild(descriptionTd);
+  tr.appendChild(actionsTd);
+
+  return tr;
+}
+
+/**
+ * Render weeks to the table body.
+ */
+function renderTable(weeks) {
+  const tbody = document.querySelector('table tbody');
+  if (!tbody) return;
+
+  tbody.innerHTML = '';
+  weeks.forEach(week => {
+    const row = createWeekRow(week);
+    tbody.appendChild(row);
+  });
+}
+
+/**
+ * Handle adding a new week.
+ */
+function handleAddWeek(event) {
+  event.preventDefault();
+
+  const titleInput = document.querySelector('#week-title');
+  const startDateInput = document.querySelector('#week-start-date');
+  const descriptionInput = document.querySelector('#week-description');
+  const linksInput = document.querySelector('#week-links');
+
+  if (!titleInput || !startDateInput || !descriptionInput) return;
+
+  const title = titleInput.value;
+  const startDate = startDateInput.value;
+  const description = descriptionInput.value;
+  const linksText = linksInput ? linksInput.value : '';
+  const links = linksText ? linksText.split('\n').filter(link => link.trim()) : [];
+
+  fetch('./api/index.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title, start_date: startDate, description, links })
+  })
+    .then(response => response.json())
+    .then(data => {
+      titleInput.value = '';
+      startDateInput.value = '';
+      descriptionInput.value = '';
+      if (linksInput) linksInput.value = '';
+      loadAndInitialize();
+    })
+    .catch(error => console.error('Error adding week:', error));
+}
+
+/**
+ * Handle table button clicks.
+ */
+function handleTableClick(event) {
+  const target = event.target;
+
+  if (target.classList.contains('delete-btn')) {
+    const weekId = target.getAttribute('data-id');
+    fetch(`./api/index.php?id=${weekId}`, { method: 'DELETE' })
+      .then(response => response.json())
+      .then(data => loadAndInitialize())
+      .catch(error => console.error('Error deleting week:', error));
+  } else if (target.classList.contains('edit-btn')) {
+    const weekId = target.getAttribute('data-id');
+    const row = target.closest('tr');
+    const titleTd = row.querySelector('td:nth-child(1)');
+    const startDateTd = row.querySelector('td:nth-child(2)');
+    const descriptionTd = row.querySelector('td:nth-child(3)');
+
+    const titleInput = document.querySelector('#week-title');
+    const startDateInput = document.querySelector('#week-start-date');
+    const descriptionInput = document.querySelector('#week-description');
+
+    if (titleInput && titleTd) titleInput.value = titleTd.textContent;
+    if (startDateInput && startDateTd) startDateInput.value = startDateTd.textContent;
+    if (descriptionInput && descriptionTd) descriptionInput.value = descriptionTd.textContent;
+  }
+}
+
+/**
+ * Load and initialize the admin page.
+ */
+async function loadAndInitialize() {
+  try {
+    const response = await fetch('./api/index.php');
+    const result = await response.json();
+    const weeks = Array.isArray(result) ? result : result.data;
+    renderTable(weeks);
+
+    const weekForm = document.querySelector('#week-form');
+    if (weekForm) {
+      weekForm.addEventListener('submit', handleAddWeek);
+    }
+
+    const table = document.querySelector('table');
+    if (table) {
+      table.addEventListener('click', handleTableClick);
+    }
+  } catch (error) {
+    console.error('Error loading weeks:', error);
+  }
+}
+
 // --- Initial Page Load ---
 // Check if this is the list page or details page
 if (document.querySelector('#week-list-section')) {
   loadWeeks();
 } else if (document.querySelector('#week-title-detail')) {
   initializePage();
+} else if (document.querySelector('table')) {
+  loadAndInitialize();
 }
