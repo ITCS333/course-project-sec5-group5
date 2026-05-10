@@ -332,11 +332,14 @@ function updateWeek(PDO $db, array $data): void
 
     // TODO: updated_at is updated automatically by MySQL
     //       (ON UPDATE CURRENT_TIMESTAMP), so no need to set it manually.
+    $params[] = $id;
+    
+
 
     // TODO: Build: UPDATE weeks SET {clauses} WHERE id = ?
     // Prepare, bind all SET values, then bind id, and execute.
-    $sql = "UPDATE weeks SET " . implode(", ", $fields) . " WHERE id = ?";
-    $params[] = $id; // Bind the id at the end
+    $sql = "UPDATE weeks SET " . implode(', ', $fields) . " WHERE id = ?";
+
 
     // TODO: sendResponse HTTP 200 on success, HTTP 500 on failure.
     try {
