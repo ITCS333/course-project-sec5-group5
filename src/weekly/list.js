@@ -66,11 +66,15 @@ async function loadWeeks() {
 
   const response = await fetch('./api/index.php');
 
-  const weeks = await response.json();
+const result = await response.json();
 
-  listSection.innerHTML = '';
+const weeks = Array.isArray(result)
+  ? result
+  : result.data;
 
-  weeks.forEach(week => {
+listSection.innerHTML = '';
+
+weeks.forEach(week => {
     const article = createWeekArticle(week);
     listSection.appendChild(article);
   });
