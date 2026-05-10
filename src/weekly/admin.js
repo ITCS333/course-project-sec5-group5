@@ -189,7 +189,9 @@ async function loadAndInitialize() {
     const response = await fetch('./api/index.php');
     const result = await response.json();
 
-    weeks = Array.isArray(result) ? result : [];
+    weeks = Array.isArray(result)
+      ? result
+      : (result.data || []);
 
     renderTable();
 
