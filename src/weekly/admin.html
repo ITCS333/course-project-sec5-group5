@@ -1,40 +1,120 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Weekly Breakdown</title>
-    <script src="admin.js" defer></script>
-</head>
-<body>
-    <header>
-        <h1>Manage Weekly Breakdown</h1>
-    </header>
+<?php
+header('Content-Type: application/json');
 
-    <main>
-        <section>
-            <h2>Add a New Week</h2>
-            <form id="week-form" action="#">
-                <fieldset>
-                    <legend>Weekly Details</legend>
+try {
+    $method = $_SERVER['REQUEST_METHOD'];
+    $action = $_GET['action'] ?? null;
+    
+    // Route requests
+    if ($method === 'GET') {
+        handleGet();
+    } elseif ($method === 'POST') {
+        handlePost($action);
+    } elseif ($method === 'PUT') {
+        handlePut();
+    } elseif ($method === 'DELETE') {
+        handleDelete($action);
+    } else {
+        http_response_code(405);
+        echo json_encode(['success' => false, 'error' => 'Method not allowed']);
+    }
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+}
 
-                    <label for="week-title">Week Title</label>
-                    <input type="text" id="week-title" required placeholder="Week 1: Introduction to HTML">
+function handleGet() {
+    $id = $_GET['id'] ?? null;
+    $search = $_GET['search'] ?? null;
+    
+    // Load your database/data logic
+    if ($id) {
+        $assignment = getAssignmentById($id);
+        if (!$assignment) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'error' => 'Not found']);
+            return;
+        }
+        echo json_encode(['success' => true, 'data' => $assignment]);
+    } else {
+        $assignments = getAllAssignments($search);
+        echo json_encode(['success' => true, 'data' => $assignments]);
+    }
+}
 
-                    <label for="week-start-date">Start Date</label>
-                    <input type="date" id="week-start-date" required>
+function handlePost($action) {
+    $body = json_decode(file_get_contents('php://input'), true);
+    
+    if ($action === 'comment') {
+        // Validate comment fields
+        if (empty($body['assignment_id']) || empty($body['text'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Missing required fields']);
+            return;
+        }
+        // Create comment logic
+        $id = createComment($body);
+        http_response_code(201);
+        echo json_encode(['success' => true, 'id' => $id]);
+    } else {
+        // Validate assignment fields
+        if (empty($body['title']) || empty($body['description']) || empty($body['due_date'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Missing required fields']);
+            return;
+        }
+        // Validate date format YYYY-MM-DD
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $body['due_date'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Invalid date format']);
+            return;
+        }
+        $id = createAssignment($body);
+        http_response_code(201);
+        echo json_encode(['success' => true, 'id' => $id]);
+    }
+}
 
-                    <label for="week-description">Description</label>
-                    <textarea id="week-description" rows="5"></textarea>
+function handlePut() {
+    $body = json_decode(file_get_contents('php://input'), true);
+    $id = $body['id'] ?? null;
+    
+    if (!$id || !assignmentExists($id)) {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'error' => 'Not found']);
+        return;
+    }
+    
+    if (isset($body['due_date']) && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $body['due_date'])) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Invalid date format']);
+        return;
+    }
+    
+    updateAssignment($id, $body);
+    echo json_encode(['success' => true]);
+}
 
-                    <label for="week-links">Resource Links (one per line)</label>
-                    <textarea id="week-links" rows="3"></textarea>
-
-                    <button type="submit" id="add-week">Add Week</button>
-                </fieldset>
-            </form>
-        </section>
-
+function handleDelete($action) {
+    if ($action === 'delete_comment') {
+        $id = $_GET['comment_id'] ?? null;
+        if (!$id || !commentExists($id)) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'error' => 'Not found']);
+            return;
+        }
+        deleteComment($id);
+        echo json_encode(['success' => true]);
+    } else {
+        $id = $_GET['id'] ?? null;
+        if (!$id || !assignmentExists($id)) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'error' => 'Not found']);
+            return;
+        }
+        deleteAssignment($id);
+        echo json_encode(['success' => true
+
         <section>
             <h2>Current Weekly Breakdown</h2>
             <table id="weeks-table">
