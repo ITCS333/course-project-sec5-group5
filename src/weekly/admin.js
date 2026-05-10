@@ -112,20 +112,22 @@ function handleAddWeek(event) {
 
   const links = linksText.split('\n').filter(link => link.trim() !== '');
 
+  const newWeek = {
+    title: title,
+    start_date: startDate,
+    description: description,
+    links: links
+  };
+  
   fetch('./api/index.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      title: title,
-      start_date: startDate,
-      description: description,
-      links: links
-    })
+    body: JSON.stringify(newWeek)
   })
     .then(response => response.json())
     .then(data => {
-      // Reload the weeks from API
-      loadAndInitialize();
+      weeks.push(data);
+      renderTable();
       weekForm.reset();
     })
     .catch(error => console.error('Error adding week:', error));
@@ -148,8 +150,10 @@ function handleTableClick(event) {
   if (target.classList.contains('delete-btn')) {
     const idToDelete = target.getAttribute('data-id');
     
-    fetch(`./api/index.php?id=${idToDelete}`, {
-      method: 'DELETE'
+    fetch('./api/index.php', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: idToDelete })
     })
       .then(response => response.json())
       .then(data => {
@@ -157,17 +161,15 @@ function handleTableClick(event) {
         renderTable();
       })
       .catch(error => console.error('Error deleting week:', error));
-  }
-
-  if (target.classList.contains('edit-btn')) {
+  } else if (target.classList.contains('edit-btn')) {
     const idToEdit = target.getAttribute('data-id');
-    const week = weeks.find(w => w.id === idToEdit);
+    const weekToEdit = weeks.find(week => week.id === idToEdit);
     
-    if (week) {
-      document.querySelector('#week-title').value = week.title;
-      document.querySelector('#week-start-date').value = week.start_date;
-      document.querySelector('#week-description').value = week.description;
-      document.querySelector('#week-links').value = week.links ? week.links.join('\n') : '';
+    if (weekToEdit) {
+      document.querySelector('#week-title').value = weekToEdit.title;
+      document.querySelector('#week-start-date').value = weekToEdit.start_date;
+      document.querySelector('#week-description').value = weekToEdit.description;
+      document.querySelector('#week-links').value = weekToEdit.links.join('\n');
     }
   }
 }
@@ -188,9 +190,9 @@ async function loadAndInitialize() {
     const response = await fetch('./api/index.php');
     const result = await response.json();
 
-weeks = Array.isArray(result)
-  ? result
-  : result.data || [];
+    weeks = Array.isArray(result)
+      ? result
+      : result.data || [];
 
     renderTable();
 
