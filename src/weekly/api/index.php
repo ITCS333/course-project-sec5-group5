@@ -181,6 +181,7 @@ function getWeekById(PDO $db, $id): void
      if ($id === null || !is_numeric($id)) {
         sendResponse(['success' => false, 'message' => 'Invalid or missing ID.'], 400);
     }
+    $id = (int)$id;
 
     // TODO: SELECT id, title, start_date, description, links, created_at
     //       FROM weeks WHERE id = ?
