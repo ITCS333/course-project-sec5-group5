@@ -105,15 +105,18 @@ function renderWeekDetails(week) {
 
   weekLinksList.innerHTML = '';
 
-  for (const link of week.links) {
-    const li = document.createElement('li');
-    const a = document.createElement('a');
+  // Check if week.links exists and is iterable before looping
+  if (week.links && Array.isArray(week.links)) {
+    for (const link of week.links) {
+      const li = document.createElement('li');
+      const a = document.createElement('a');
 
-    a.href = link;
-    a.textContent = link;
+      a.href = link;
+      a.textContent = link;
 
-    li.appendChild(a);
-    weekLinksList.appendChild(li);
+      li.appendChild(a);
+      weekLinksList.appendChild(li);
+    }
   }
 }
 
@@ -170,6 +173,9 @@ function renderComments() {
  */
 async function handleAddComment(event) {
   event.preventDefault();
+
+  // Check if newCommentText exists before accessing value
+  if (!newCommentText) return;
 
   const commentText = newCommentText.value.trim();
 
