@@ -41,6 +41,9 @@ function createWeekRow(week) {
   const titleTd = document.createElement('td');
   titleTd.textContent = week.title;
 
+  const startDateTd = document.createElement('td');
+  startDateTd.textContent = week.start_date;
+
   const descriptionTd = document.createElement('td');
   descriptionTd.textContent = week.description;
 
@@ -60,6 +63,7 @@ function createWeekRow(week) {
   actionTd.appendChild(deleteBtn);
 
   tr.appendChild(titleTd);
+  tr.appendChild(startDateTd);
   tr.appendChild(descriptionTd);
   tr.appendChild(actionTd);
 
@@ -108,19 +112,23 @@ function handleAddWeek(event) {
 
   const links = linksText.split('\n').filter(link => link.trim() !== '');
 
-   const newWeek = {
-    id: `week_${Date.now()}`,
-    title: title,
-    startDate: startDate,
-    description: description,
-    links: links
-  };
-  
-  weeks.push(newWeek);
-  
-  renderTable();
-  
-  weekForm.reset();
+  fetch('./api/index.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      title: title,
+      start_date: startDate,
+      description: description,
+      links: links
+    })
+  })
+    .then(response => response.json())
+    .then(data => {
+      // Reload the weeks from API
+      loadAndInitialize();
+      weekForm.reset();
+    })
+    .catch(error => console.error('Error adding week:', error));
 }
 
 /**
@@ -136,12 +144,32 @@ function handleAddWeek(event) {
 function handleTableClick(event) {
   // ... your implementation here ...
   const target = event.target;
+
   if (target.classList.contains('delete-btn')) {
     const idToDelete = target.getAttribute('data-id');
-    weeks = weeks.filter(week => week.id !== idToDelete);
-    renderTable();
+    
+    fetch(`./api/index.php?id=${idToDelete}`, {
+      method: 'DELETE'
+    })
+      .then(response => response.json())
+      .then(data => {
+        weeks = weeks.filter(week => week.id !== idToDelete);
+        renderTable();
+      })
+      .catch(error => console.error('Error deleting week:', error));
   }
 
+  if (target.classList.contains('edit-btn')) {
+    const idToEdit = target.getAttribute('data-id');
+    const week = weeks.find(w => w.id === idToEdit);
+    
+    if (week) {
+      document.querySelector('#week-title').value = week.title;
+      document.querySelector('#week-start-date').value = week.start_date;
+      document.querySelector('#week-description').value = week.description;
+      document.querySelector('#week-links').value = week.links ? week.links.join('\n') : '';
+    }
+  }
 }
 
 /**
@@ -157,7 +185,7 @@ function handleTableClick(event) {
 async function loadAndInitialize() {
    // ... your implementation here ...
   try {
-    const response = await fetch('weeks.json');
+    const response = await fetch('./api/index.php');
     const result = await response.json();
 
 weeks = Array.isArray(result)
