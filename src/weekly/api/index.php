@@ -178,15 +178,18 @@ function getWeekById(PDO $db, $id): void
 {
     // TODO: Validate that $id is provided and numeric.
     // If not, call sendResponse with HTTP 400.
-     if ($id === null || !is_numeric($id)) {
+    if ($id === null || !is_numeric($id)) {
         sendResponse(['success' => false, 'message' => 'Invalid or missing ID.'], 400);
+        return;
     }
+
     $id = (int)$id;
 
     // TODO: SELECT id, title, start_date, description, links, created_at
     //       FROM weeks WHERE id = ?
     $stmt = $db->prepare("SELECT id, title, start_date, description, links, created_at FROM weeks WHERE id = ?");
     $stmt->execute([(int)$id]);
+    $week = $stmt->fetch(PDO::FETCH_ASSOC);
 
     // TODO: Fetch one row. Decode the links JSON:
     // $week['links'] = json_decode($week['links'], true) ?? [];
@@ -301,11 +304,11 @@ function updateWeek(PDO $db, array $data): void
 
     if (isset($data['title'])) {
         $fields[] = "title = ?";
-        $params[] = trim($data['title']);
+        $params[] = trim((string)$data['title']);
     }
 
     if (isset($data['start_date'])) {
-        $start_date = trim($data['start_date']);
+        $start_date = trim((string)$data['start_date']);
         $d = DateTime::createFromFormat('Y-m-d', $start_date);
         if (!$d || $d->format('Y-m-d') !== $start_date) {
             sendResponse(['success' => false, 'message' => 'Invalid start date format. Use YYYY-MM-DD.'], 400);
@@ -316,12 +319,12 @@ function updateWeek(PDO $db, array $data): void
 
     if (isset($data['description'])) {
         $fields[] = "description = ?";
-        $params[] = trim($data['description']);
+        $params[] = trim((string)$data['description']);
     }
 
     if (isset($data['links'])) {
         $fields[] = "links = ?";
-        $params[] = is_array($data['links']) ? json_encode($data['links']) : json_encode([]);
+        $params[] = is_array($data['links']) ? json_encode($data['links']) : (is_string($data['links']) ? $data['links'] : json_encode([]));
     }
 
     // TODO: If no updatable fields are present, sendResponse HTTP 400.
@@ -331,28 +334,26 @@ function updateWeek(PDO $db, array $data): void
 
 
     // TODO: updated_at is updated automatically by MySQL
-    //       (ON UPDATE CURRENT_TIMESTAMP), so no need to set it manually.
+    //       (ON UPDATE CURRENT_TIMESTAMP), so no need to set it manually.  
     $params[] = $id;
-    
-
+   
 
     // TODO: Build: UPDATE weeks SET {clauses} WHERE id = ?
     // Prepare, bind all SET values, then bind id, and execute.
-    $sql = "UPDATE weeks SET " . implode(', ', $fields) . " WHERE id = ?";
-
+     $sql = "UPDATE `weeks` SET " . implode(', ', $fields) . " WHERE `id` = ?";
 
     // TODO: sendResponse HTTP 200 on success, HTTP 500 on failure.
     try {
         $stmt = $db->prepare($sql);
         $stmt->execute($params);
 
-        if ($stmt->rowCount() > 0) {
+        if ($success) {
             sendResponse(['success' => true, 'message' => 'Week updated successfully.'], 200);
         } else {
             sendResponse(['success' => false, 'message' => 'Failed to update week.'], 500);
         }
     } catch (PDOException $e) {
-        sendResponse(['success' => false, 'message' => 'Database error: ' . $e->getMessage()], 500);
+        sendResponse(['success' => false, 'message' => 'Database error.'], 500);
     }
 }
 
