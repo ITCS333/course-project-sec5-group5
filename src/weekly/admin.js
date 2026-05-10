@@ -155,16 +155,22 @@ function handleTableClick(event) {
  * 5. Add the 'click' event listener to `weeksTableBody` (calls `handleTableClick`). 
  */
 async function loadAndInitialize() {
-  // ... your implementation here ...
+   // ... your implementation here ...
+  try {
     const response = await fetch('weeks.json');
     const data = await response.json();
 
-    weeks = data;
-    renderTable();
-  
-  weekForm.addEventListener('submit', handleAddWeek);
-  weeksTableBody.addEventListener('click', handleTableClick);
+    // Fix: ensure weeks is always an array
+    weeks = Array.isArray(data) ? data : data.weeks;
 
+    renderTable();
+
+    weekForm.addEventListener('submit', handleAddWeek);
+    weeksTableBody.addEventListener('click', handleTableClick);
+
+  } catch (error) {
+    console.error('Initialization not successful:', error);
+  }
 }
 
 // --- Initial Page Load ---
